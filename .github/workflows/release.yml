@@ -9,7 +9,7 @@
 # heißen und die Prüfsummendatei exakt `SHA256SUMS`. Install-Skripte, CI und der
 # eingebaute `rubberduck self update` verlassen sich auf diese Namen.
 #
-# HINWEIS (Platzhalter): Dieses Repo geht von owner/repo = "leuchtturm/rubberduck"
+# HINWEIS (Platzhalter): Dieses Repo geht von owner/repo = "j-pfalzgraf/rubberduck"
 # aus. Wenn ihr forkt, müsst ihr nur den Repo-Namen ändern (der Workflow nutzt
 # automatisch ${{ github.repository }} bzw. das gepushte Tag) – an dieser Datei
 # sind dafür keine Anpassungen nötig.

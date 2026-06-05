@@ -9,7 +9,7 @@
 # Nutzung:
 #   ./install.sh [VERSION]
 #   VERSION=v0.1.0 ./install.sh
-#   curl -fsSL https://raw.githubusercontent.com/leuchtturm/rubberduck/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/j-pfalzgraf/rubberduck/main/install.sh | sh
 #
 # VERSION ist optional. Ohne Angabe wird das neueste Release ("latest")
 # installiert. Erlaubt sind z. B. "v0.1.0" oder "0.1.0" (das "v" wird
@@ -28,7 +28,7 @@ set -eu
 # !!! PLATZHALTER — bei einem Fork hier owner/repo anpassen !!!
 # GitHub-Owner und -Repository. Wird für alle Download-URLs verwendet.
 # ---------------------------------------------------------------------------
-OWNER="leuchtturm"
+OWNER="j-pfalzgraf"
 REPO="rubberduck"
 
 # Name der Binary im Archiv und auf der Platte.

@@ -10,7 +10,7 @@
     and (if needed) adds that directory to the *user* PATH.
 
     Designed to be run directly via:
-        irm https://raw.githubusercontent.com/leuchtturm/rubberduck/main/install.ps1 | iex
+        irm https://raw.githubusercontent.com/j-pfalzgraf/rubberduck/main/install.ps1 | iex
     (no mandatory parameters).
 
     Version selection (in order of precedence):
@@ -18,7 +18,7 @@
         2. $env:VERSION environment variable
         3. default: latest
 
-    NOTE (PLACEHOLDER): The GitHub owner/repo below ("leuchtturm/rubberduck")
+    NOTE (PLACEHOLDER): The GitHub owner/repo below ("j-pfalzgraf/rubberduck")
     is a placeholder. If you forked or renamed the project, change $Owner and
     $Repo (or the derived $BaseUrl) to point at your repository.
 
@@ -36,7 +36,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 # --- Configuration (PLACEHOLDER owner/repo: change these if you forked) --------
-$Owner   = 'leuchtturm'
+$Owner   = 'j-pfalzgraf'
 $Repo    = 'rubberduck'
 $BinName = 'rubberduck'                 # produces rubberduck.exe on Windows
 $BaseUrl = "https://github.com/$Owner/$Repo"

@@ -16,7 +16,7 @@
 > Die Badges sind generische [shields.io](https://shields.io)-Platzhalter, keine
 > Live-Status-Badges.
 
-> **Hinweis (Platzhalter):** `leuchtturm/rubberduck` ist im gesamten Dokument ein
+> **Hinweis (Platzhalter):** `j-pfalzgraf/rubberduck` ist im gesamten Dokument ein
 > Platzhalter für dein eigenes GitHub-`owner/repo`. Ersetze ihn überall, wo er in
 > URLs oder Befehlen auftaucht, durch deine tatsächlichen Werte.
 
@@ -45,19 +45,19 @@ das eingebaute Selbst-Update lädt (auf ausdrücklichen Wunsch) etwas herunter.
 
 ### Schnellinstallation (curl | sh / PowerShell)
 
-> Die `leuchtturm/rubberduck`-URL ist ein **Platzhalter** – bitte durch dein
+> Die `j-pfalzgraf/rubberduck`-URL ist ein **Platzhalter** – bitte durch dein
 > `owner/repo` ersetzen.
 
 **Linux / macOS:**
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/leuchtturm/rubberduck/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/j-pfalzgraf/rubberduck/main/install.sh | sh
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
-irm https://raw.githubusercontent.com/leuchtturm/rubberduck/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/j-pfalzgraf/rubberduck/main/install.ps1 | iex
 ```
 
 ### Über Cargo
@@ -74,10 +74,10 @@ Ein `brew tap` ist **geplant/optional** und noch nicht verfügbar.
 
 ### Installationsverzeichnisse & PATH
 
-| Plattform     | Installationsverzeichnis                    |
-| ------------- | ------------------------------------------- |
-| Linux / macOS | `~/.local/bin`                              |
-| Windows       | `%LOCALAPPDATA%\Programs\rubberduck`        |
+| Plattform     | Installationsverzeichnis             |
+| ------------- | ------------------------------------ |
+| Linux / macOS | `~/.local/bin`                       |
+| Windows       | `%LOCALAPPDATA%\Programs\rubberduck` |
 
 > **PATH-Hinweis:** Liegt das Installationsverzeichnis nicht in deinem `PATH`,
 > warnen die Installer dich entsprechend. Füge das Verzeichnis dann zu deinem
@@ -98,15 +98,15 @@ Ein `brew tap` ist **geplant/optional** und noch nicht verfügbar.
 
 ## Verwendung
 
-| Befehl                        | Beschreibung                                   |
-| ----------------------------- | ---------------------------------------------- |
-| `rubberduck`                  | Standard-Session                               |
-| `rubberduck --topic logic`    | Themen-Fragen (`default` \| `logic` \| `perf` \| `api`) |
-| `rubberduck --log`            | Session als Markdown speichern                 |
-| `rubberduck --quiet`          | ohne ASCII-Ente                                |
-| `rubberduck --version`        | Version anzeigen                               |
-| `rubberduck self update [--check]` | aktualisieren (`--check`: nur prüfen)     |
-| `rubberduck self uninstall`   | rubberduck samt Konfiguration und Logs entfernen |
+| Befehl                             | Beschreibung                                            |
+| ---------------------------------- | ------------------------------------------------------- |
+| `rubberduck`                       | Standard-Session                                        |
+| `rubberduck --topic logic`         | Themen-Fragen (`default` \| `logic` \| `perf` \| `api`) |
+| `rubberduck --log`                 | Session als Markdown speichern                          |
+| `rubberduck --quiet`               | ohne ASCII-Ente                                         |
+| `rubberduck --version`             | Version anzeigen                                        |
+| `rubberduck self update [--check]` | aktualisieren (`--check`: nur prüfen)                   |
+| `rubberduck self uninstall`        | rubberduck samt Konfiguration und Logs entfernen        |
 
 ## Fragen anpassen
 
@@ -147,10 +147,10 @@ Mehrere Sessions am selben Tag werden an dieselbe Datei angehängt.
   Konfiguration und Logs. Alternativ als Einzeiler:
 
   ```sh
-  curl -fsSL https://raw.githubusercontent.com/leuchtturm/rubberduck/main/uninstall.sh | sh
+  curl -fsSL https://raw.githubusercontent.com/j-pfalzgraf/rubberduck/main/uninstall.sh | sh
   ```
 
-  (Auch hier `leuchtturm/rubberduck` durch dein **owner/repo** ersetzen.)
+  (Auch hier `j-pfalzgraf/rubberduck` durch dein **owner/repo** ersetzen.)
 
 > Updates passieren **ausschließlich auf ausdrücklichen Befehl** – nie still und
 > nie automatisch im Hintergrund.
@@ -178,12 +178,12 @@ Das fertige Binary liegt anschließend unter `target/release/rubberduck`
 
 ## Konfiguration & Datenablage
 
-| Zweck                  | Pfad                                  | Inhalt                  |
-| ---------------------- | ------------------------------------- | ----------------------- |
-| Konfiguration          | `~/.config/rubberduck`                | `questions.yaml`        |
-| Logs / Daten           | `~/.rubberduck`                       | `session-<datum>.md`    |
-| Override Konfiguration | `$RUBBERDUCK_CONFIG_DIR`              | überschreibt Config-Pfad |
-| Override Daten         | `$RUBBERDUCK_DATA_DIR`                | überschreibt Daten-Pfad  |
+| Zweck                  | Pfad                     | Inhalt                   |
+| ---------------------- | ------------------------ | ------------------------ |
+| Konfiguration          | `~/.config/rubberduck`   | `questions.yaml`         |
+| Logs / Daten           | `~/.rubberduck`          | `session-<datum>.md`     |
+| Override Konfiguration | `$RUBBERDUCK_CONFIG_DIR` | überschreibt Config-Pfad |
+| Override Daten         | `$RUBBERDUCK_DATA_DIR`   | überschreibt Daten-Pfad  |
 
 > Die Pfade sind auf allen Plattformen gleich aufgebaut. Unter Windows steht `~`
 > für `%USERPROFILE%`, also `%USERPROFILE%\.config\rubberduck` bzw.
