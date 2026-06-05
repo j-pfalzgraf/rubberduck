@@ -1,0 +1,60 @@
+[package]
+name = "rubberduck-cli"
+version = "0.1.0"
+edition = "2021"
+description = "Ein offline Rubber-Duck-Debugging-Begleiter fürs Terminal – eine ASCII-Ente stellt strukturierte Rückfragen, bis der Bug gefunden ist."
+license = "MIT"
+repository = "https://github.com/leuchtturm/rubberduck"
+homepage = "https://github.com/leuchtturm/rubberduck"
+readme = "README.md"
+keywords = ["debugging", "cli", "rubber-duck", "productivity", "tui"]
+categories = ["command-line-utilities", "development-tools::debugging"]
+
+# Binärname bleibt `rubberduck`, das Crate heißt `rubberduck-cli` (für `cargo install`).
+[[bin]]
+name = "rubberduck"
+path = "src/main.rs"
+
+[lib]
+name = "rubberduck_cli"
+path = "src/lib.rs"
+
+[dependencies]
+clap = { version = "4.6", features = ["derive"] }
+dialoguer = "0.12"
+crossterm = "0.29"
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+directories = "6"
+anyhow = "1"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+self-replace = "1"
+# Nur aktiv über das Feature `vendored-openssl`; sorgt dann für ein statisch
+# eingebautes OpenSSL (portable Release-Binaries, auch beim Cross-Compile).
+openssl = { version = "0.10", optional = true }
+# Standard-TLS (native-tls/OpenSSL); lokal über System-OpenSSL, in CI via
+# `--features vendored-openssl` statisch gebaut.
+self_update = { version = "0.44", features = [
+    "archive-tar",
+    "archive-zip",
+    "compression-flate2",
+    "compression-zip-deflate",
+] }
+
+[features]
+# Für portable Release-Binaries: baut OpenSSL aus dem Quellcode (perl + make,
+# kein cmake nötig) und linkt es statisch.
+vendored-openssl = ["dep:openssl", "openssl/vendored"]
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+tempfile = "3"
+
+# Schlankes, schnell startendes Release-Binary (Erfolgskriterium: Start < 2 s).
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+panic = "abort"

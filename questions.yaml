@@ -1,0 +1,45 @@
+# rubberduck – Fragen-Pool
+#
+# Editiere diese Datei frei: ergänze Themen oder Fragen, dein Team kann sie teilen.
+# Aufbau: `topics` ist eine Map von Themenname -> Liste von Fragen (Strings).
+# Das Standardthema heißt `default`. Eigene Themen erreichst du via `--topic <name>`.
+
+topics:
+  default:
+    - "Was soll dein Code an dieser Stelle eigentlich tun?"
+    - "Was passiert stattdessen – ganz konkret?"
+    - "Woran genau merkst du, dass etwas falsch läuft (Fehlermeldung, falscher Wert, Absturz)?"
+    - "Welche Zeile oder Funktion ist am verdächtigsten – und warum gerade die?"
+    - "Welche Annahme triffst du hier, die vielleicht gar nicht stimmt?"
+    - "Was hast du zuletzt geändert, bevor der Fehler auftauchte?"
+    - "Mit welchen Eingaben geht es schief – und mit welchen klappt es?"
+    - "Wenn du den fraglichen Wert kurz davor ausgibst: Was erwartest du, was siehst du?"
+    - "Welchen Teil des Problems könntest du isolieren oder kleiner machen?"
+    - "Was wäre das Einfachste, das du als Nächstes ausprobieren könntest?"
+
+  logic:
+    - "Stimmen deine Bedingungen wirklich (==, <, >, Klammern, Negationen)?"
+    - "Steckt an den Grenzen ein Off-by-One-Fehler (< statt <=, Index 0 vs. 1)?"
+    - "Welche Randfälle hast du noch nicht durchdacht (leer, null, negativ, sehr groß)?"
+    - "Läuft die Schleife so oft wie gedacht – einmal zu viel oder zu wenig?"
+    - "Stimmt die Reihenfolge der Schritte, oder passiert etwas zu früh oder zu spät?"
+    - "Wird eine Variable überschrieben oder behält sie heimlich einen alten Wert?"
+    - "Wenn du den Fall von Hand auf Papier durchrechnest: Wo weicht das Programm zuerst ab?"
+
+  perf:
+    - "Was genau ist langsam – und woher weißt du das (Messung oder Gefühl)?"
+    - "Hast du den langsamen Teil gemessen oder nur vermutet?"
+    - "Welche Operation läuft am häufigsten – steckt da eine Schleife in der Schleife?"
+    - "Wird etwas mehrfach berechnet, das du einmal berechnen und merken könntest?"
+    - "Wie wächst die Laufzeit, wenn die Eingabe doppelt so groß wird?"
+    - "Liegt es an der Rechenzeit, am Speicher, an I/O oder am Netzwerk?"
+    - "Passt deine Datenstruktur zum Zugriffsmuster (Suche, Einfügen, Reihenfolge)?"
+
+  api:
+    - "Was sagt die Doku, dass dieser Aufruf zurückgibt – und was tut er wirklich?"
+    - "Stimmen Reihenfolge, Typen und Einheiten der übergebenen Parameter?"
+    - "Welchen Statuscode bzw. welche Fehlerantwort bekommst du exakt?"
+    - "Behandelst du den Fehlerfall der Antwort oder nur den Erfolgsfall?"
+    - "Stimmen Authentifizierung, Header und Content-Type?"
+    - "Liegt es an deiner Anfrage oder an der Antwort der Gegenseite?"
+    - "Was zeigt ein direkter Test (curl/Postman) im Vergleich zu deinem Code?"
