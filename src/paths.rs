@@ -22,6 +22,11 @@ pub fn questions_file() -> Result<PathBuf> {
     Ok(config_dir()?.join("questions.yaml"))
 }
 
+/// Pfad zur Einstellungsdatei (`<config>/config.yaml`).
+pub fn config_file() -> Result<PathBuf> {
+    Ok(config_dir()?.join("config.yaml"))
+}
+
 /// Datenverzeichnis `~/.rubberduck` (bewusst nicht XDG, gemäß Spec).
 pub fn data_dir() -> Result<PathBuf> {
     if let Ok(p) = std::env::var("RUBBERDUCK_DATA_DIR") {

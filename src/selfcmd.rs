@@ -15,6 +15,7 @@ use std::path::Path;
 /// GitHub-Repository, aus dem Releases bezogen werden. **Vor dem ersten Release
 /// auf den echten Owner/Repo-Namen anpassen.**
 pub const REPO_OWNER: &str = "j-pfalzgraf";
+/// Repository-Name innerhalb von [`REPO_OWNER`].
 pub const REPO_NAME: &str = "rubberduck";
 /// Name des Binärassets innerhalb der Release-Archive.
 pub const BIN_NAME: &str = "rubberduck";
