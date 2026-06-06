@@ -174,6 +174,7 @@ struct Catalog {
     demo_intro: &'static str,
     demo_section_moods: &'static str,
     demo_section_themes: &'static str,
+    demo_section_spinners: &'static str,
     demo_done: &'static str,
     // ----- moods ----------------------------------------------------------
     mood_idle: &'static str,
@@ -258,6 +259,7 @@ const EN: Catalog = Catalog {
     demo_intro: "Watch closely — I type, I swim, I quack, and I celebrate when you win.",
     demo_section_moods: "Moods",
     demo_section_themes: "Themes",
+    demo_section_spinners: "Spinners",
     demo_done: "That's the tour — happy debugging!",
     mood_idle: "Idle",
     mood_thinking: "Thinking",
@@ -341,6 +343,7 @@ const DE: Catalog = Catalog {
     demo_intro: "Schau genau hin – ich tippe, schwimme, quake und feiere, wenn du gewinnst.",
     demo_section_moods: "Stimmungen",
     demo_section_themes: "Themes",
+    demo_section_spinners: "Spinner",
     demo_done: "Das war die Tour – frohes Debuggen!",
     mood_idle: "Ruhig",
     mood_thinking: "Nachdenklich",
@@ -424,6 +427,7 @@ const FR: Catalog = Catalog {
     demo_intro: "Regarde bien – je tape, je nage, je cancane et je fête ta victoire.",
     demo_section_moods: "Humeurs",
     demo_section_themes: "Thèmes",
+    demo_section_spinners: "Indicateurs",
     demo_done: "Fin de la visite – bon débogage !",
     mood_idle: "Au repos",
     mood_thinking: "Pensif",
@@ -698,6 +702,12 @@ impl Tr {
     #[must_use]
     pub fn demo_section_themes(self) -> &'static str {
         self.cat().demo_section_themes
+    }
+
+    /// Demo section heading: spinner styles.
+    #[must_use]
+    pub fn demo_section_spinners(self) -> &'static str {
+        self.cat().demo_section_spinners
     }
 
     /// Closing line of the demo.

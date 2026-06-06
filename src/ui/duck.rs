@@ -4,7 +4,7 @@
 //! eye. Everything else (moods, blinking, swimming, quacking, celebrating) builds
 //! on top of it.
 
-use crate::ui::animate::{Animation, Clip, Easing, Frame};
+use crate::ui::animate::{Animation, Clip, Easing, Frame, Sequence};
 use crate::ui::gradient::{self, Gradient};
 use crate::ui::theme::Styler;
 use std::time::Duration;
@@ -212,6 +212,16 @@ pub fn swim_in(mood: Mood, styler: Styler, width: usize) -> impl Animation {
     }
 }
 
+/// A fluid entrance: the duck swims in from the right and then **settles** with
+/// a blink, played as one continuous [`Sequence`] (no seam between the two).
+#[must_use]
+pub fn entrance(mood: Mood, styler: Styler, width: usize) -> Sequence {
+    Sequence::new(vec![
+        Box::new(swim_in(mood, styler, width)),
+        Box::new(idle_clip(mood, styler)),
+    ])
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -250,6 +260,18 @@ mod tests {
         let last = anim.frame(anim.frame_count() - 1);
         // First frame indented, last flush (no leading space in the duck head).
         assert!(first.lines[0].starts_with(' '));
+        assert!(last.lines[1].starts_with("<("));
+    }
+
+    #[test]
+    fn entrance_swims_then_settles() {
+        let anim = entrance(Mood::Idle, styler(), 40);
+        // 14 swim steps + 5 idle frames played as one sequence.
+        assert_eq!(anim.frame_count(), 14 + 5);
+        // Starts mid-swim (indented), ends on a settled duck with no water line.
+        assert!(anim.frame(0).lines[0].starts_with(' '));
+        let last = anim.frame(anim.frame_count() - 1);
+        assert!(last.lines.iter().all(|l| !l.contains('~')));
         assert!(last.lines[1].starts_with("<("));
     }
 }

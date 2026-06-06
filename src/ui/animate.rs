@@ -81,6 +81,92 @@ impl Animation for Clip {
     }
 }
 
+/// Concatenates several animations into one continuous sequence.
+///
+/// Frame `i` addresses the segment that contains the `i`-th global frame, so a
+/// [`Player`] redraws the whole sequence **in place** as a single fluid
+/// animation — e.g. a duck that swims in and then settles with a blink, without
+/// the seam of two separate playbacks. Each segment keeps its own per-frame
+/// [`Animation::delay`].
+pub struct Sequence {
+    segments: Vec<Box<dyn Animation>>,
+}
+
+impl Sequence {
+    /// A sequence from its segments, played back-to-back in order.
+    #[must_use]
+    pub fn new(segments: Vec<Box<dyn Animation>>) -> Self {
+        Self { segments }
+    }
+
+    /// Maps a global frame index to `(segment, local index)`.
+    fn locate(&self, i: usize) -> Option<(usize, usize)> {
+        let mut rest = i;
+        for (seg, anim) in self.segments.iter().enumerate() {
+            let count = anim.frame_count();
+            if rest < count {
+                return Some((seg, rest));
+            }
+            rest -= count;
+        }
+        None
+    }
+}
+
+impl Animation for Sequence {
+    fn frame_count(&self) -> usize {
+        self.segments.iter().map(|a| a.frame_count()).sum()
+    }
+
+    fn frame(&self, i: usize) -> Frame {
+        match self.locate(i) {
+            Some((seg, local)) => self.segments[seg].frame(local),
+            None => Frame::default(),
+        }
+    }
+
+    fn delay(&self, i: usize) -> Duration {
+        match self.locate(i) {
+            Some((seg, local)) => self.segments[seg].delay(local),
+            None => Duration::from_millis(90),
+        }
+    }
+}
+
+/// Loops an inner animation a fixed number of `times`.
+///
+/// Useful for cyclic motions (a spinner, an idle blink) where the base
+/// animation defines exactly **one** cycle and the repeat count is a separate,
+/// reusable concern — keeping the cycle definition DRY.
+pub struct Repeat {
+    inner: Box<dyn Animation>,
+    times: usize,
+}
+
+impl Repeat {
+    /// Repeats `inner` `times` times (`times == 0` yields an empty animation).
+    #[must_use]
+    pub fn new(inner: Box<dyn Animation>, times: usize) -> Self {
+        Self { inner, times }
+    }
+}
+
+impl Animation for Repeat {
+    fn frame_count(&self) -> usize {
+        self.inner.frame_count() * self.times
+    }
+
+    fn frame(&self, i: usize) -> Frame {
+        let cycle = self.inner.frame_count().max(1);
+        self.inner.frame(i % cycle)
+    }
+
+    fn delay(&self, i: usize) -> Duration {
+        let cycle = self.inner.frame_count().max(1);
+        self.inner.delay(i % cycle)
+    }
+}
+
 /// Easing curves for movements; map `t ∈ [0,1]` onto `[0,1]`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Easing {
@@ -260,5 +346,40 @@ mod tests {
             .play(&Clip::new(vec![], Duration::from_millis(0)))
             .unwrap();
         assert!(surf.out.is_empty());
+    }
+
+    fn two_frames(a: &str, b: &str) -> Clip {
+        Clip::new(
+            vec![Frame::new(vec![a.into()]), Frame::new(vec![b.into()])],
+            Duration::from_millis(10),
+        )
+    }
+
+    #[test]
+    fn sequence_concatenates_segments_in_order() {
+        let seq = Sequence::new(vec![
+            Box::new(two_frames("A0", "A1")),
+            Box::new(two_frames("B0", "B1")),
+        ]);
+        assert_eq!(seq.frame_count(), 4);
+        let texts: Vec<String> = (0..seq.frame_count())
+            .map(|i| seq.frame(i).lines[0].clone())
+            .collect();
+        assert_eq!(texts, ["A0", "A1", "B0", "B1"]);
+    }
+
+    #[test]
+    fn repeat_loops_the_inner_cycle() {
+        let rep = Repeat::new(Box::new(two_frames("x", "y")), 3);
+        assert_eq!(rep.frame_count(), 6);
+        // Frame 4 == inner frame 0 ("x"); frame 5 == inner frame 1 ("y").
+        assert_eq!(rep.frame(4).lines[0], "x");
+        assert_eq!(rep.frame(5).lines[0], "y");
+    }
+
+    #[test]
+    fn repeat_zero_times_is_empty() {
+        let rep = Repeat::new(Box::new(two_frames("x", "y")), 0);
+        assert!(rep.is_empty());
     }
 }

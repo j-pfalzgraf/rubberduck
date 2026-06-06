@@ -132,3 +132,18 @@ jobs:
           "$bin" config reset
           "$bin" config show | grep "theme: classic" >/dev/null
           echo "CLI smoke test passed"
+
+  package:
+    name: publish dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install OpenSSL headers
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
+      # Packages and builds the crate exactly as `cargo install rubberduck-cli`
+      # would, so a missing `include_str!` asset or bad metadata fails CI rather
+      # than the first real publish.
+      - name: Verify the crate is publishable
+        run: cargo publish --dry-run --locked

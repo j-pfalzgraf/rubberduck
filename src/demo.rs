@@ -1,12 +1,14 @@
 //! The animated guided tour shown by `rubberduck demo`.
 //!
-//! It exercises every animation (gradient banner, swim-in, typewriter, quack,
-//! thinking spinner, all moods, theme previews and the confetti celebration) so
-//! users can see what rubberduck can do. Like everything else it degrades
-//! cleanly to static output without a terminal and is fully localized.
+//! It exercises every animation (gradient banner, fluid swim-in entrance,
+//! typewriter, quack, all spinner styles, all moods, theme previews and the
+//! confetti celebration) so users can see what rubberduck can do. Like
+//! everything else it degrades cleanly to static output without a terminal and
+//! is fully localized.
 
 use crate::ui::duck::Mood;
 use crate::ui::gradient::Gradient;
+use crate::ui::spinner::SpinnerStyle;
 use crate::ui::Ui;
 use anyhow::Result;
 
@@ -35,6 +37,11 @@ pub fn run(ui: &mut Ui) -> Result<()> {
     println!("\n{}", ui.styler().accent(tr.demo_section_moods()));
     for mood in SHOWCASE {
         ui.duck_says(tr.mood_label(mood), mood)?;
+    }
+
+    println!("\n{}", ui.styler().accent(tr.demo_section_spinners()));
+    for style in SpinnerStyle::ALL {
+        ui.spinner_showcase(style)?;
     }
 
     println!("\n{}", ui.styler().accent(tr.demo_section_themes()));

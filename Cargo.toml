@@ -3,7 +3,7 @@ name = "rubberduck-cli"
 version = "0.1.0"
 edition = "2021"
 rust-version = "1.87"
-description = "Ein offline Rubber-Duck-Debugging-Begleiter fürs Terminal – eine ASCII-Ente stellt strukturierte Rückfragen, bis der Bug gefunden ist."
+description = "An offline rubber-duck-debugging companion for your terminal — an animated ASCII duck asks structured questions until you find the bug yourself."
 license = "MIT"
 repository = "https://github.com/j-pfalzgraf/rubberduck"
 homepage = "https://github.com/j-pfalzgraf/rubberduck"
@@ -11,7 +11,7 @@ readme = "README.md"
 keywords = ["debugging", "cli", "rubber-duck", "productivity", "tui"]
 categories = ["command-line-utilities", "development-tools::debugging"]
 
-# Binärname bleibt `rubberduck`, das Crate heißt `rubberduck-cli` (für `cargo install`).
+# The binary stays `rubberduck`; the crate is `rubberduck-cli` (for `cargo install`).
 [[bin]]
 name = "rubberduck"
 path = "src/main.rs"
@@ -35,11 +35,11 @@ directories = "6"
 anyhow = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 self-replace = "1"
-# Nur aktiv über das Feature `vendored-openssl`; sorgt dann für ein statisch
-# eingebautes OpenSSL (portable Release-Binaries, auch beim Cross-Compile).
+# Only active via the `vendored-openssl` feature; then statically builds OpenSSL
+# from source (portable release binaries, also when cross-compiling).
 openssl = { version = "0.10", optional = true }
-# Standard-TLS (native-tls/OpenSSL); lokal über System-OpenSSL, in CI via
-# `--features vendored-openssl` statisch gebaut.
+# Default TLS (native-tls/OpenSSL); locally via system OpenSSL, in CI built
+# statically via `--features vendored-openssl`.
 self_update = { version = "0.44", features = [
     "archive-tar",
     "archive-zip",
@@ -48,8 +48,8 @@ self_update = { version = "0.44", features = [
 ] }
 
 [features]
-# Für portable Release-Binaries: baut OpenSSL aus dem Quellcode (perl + make,
-# kein cmake nötig) und linkt es statisch.
+# For portable release binaries: builds OpenSSL from source (perl + make, no
+# cmake required) and links it statically.
 vendored-openssl = ["dep:openssl", "openssl/vendored"]
 
 [dev-dependencies]
@@ -57,7 +57,7 @@ assert_cmd = "2"
 predicates = "3"
 tempfile = "3"
 
-# Schlankes, schnell startendes Release-Binary (Erfolgskriterium: Start < 2 s).
+# Lean, fast-starting release binary (success criterion: startup < 2 s).
 [profile.release]
 opt-level = "z"
 lto = true

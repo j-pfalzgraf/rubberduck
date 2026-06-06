@@ -218,9 +218,10 @@ appears.
 ## Demo
 
 `rubberduck demo` plays an animated tour of every effect — the gradient title,
-the duck swimming in, the typewriter speech bubble, a quack, the thinking
-spinner, all moods, a colour preview of every theme, and the confetti
-celebration. It respects `--speed`, `--no-anim`, `--theme` and `--color`.
+the duck's fluid swim-in entrance, the typewriter speech bubble, a quack, every
+spinner style (braille, dots, line, arc, bounce, moon), all moods, a colour
+preview of every theme, and the confetti celebration. It respects `--speed`,
+`--no-anim`, `--theme` and `--color`.
 
 ## Statistics & history
 
@@ -376,8 +377,9 @@ GitHub Actions cover the project end to end:
 
 - **CI** (`ci.yml`): `cargo fmt`, `clippy -D warnings`, `cargo doc -D warnings`,
   tests on Linux/macOS/Windows, an MSRV check (Rust 1.87), `shellcheck`,
-  `actionlint` (lints the workflows themselves and their inline shell), and a
-  CLI smoke test that runs the built binary in English, German and French.
+  `actionlint` (lints the workflows themselves and their inline shell), a
+  `cargo publish --dry-run` so the `cargo install` path can't silently break,
+  and a CLI smoke test that runs the built binary in English, German and French.
 - **Audit** (`audit.yml`): weekly `cargo audit` against the RustSec database.
 - **Docs** (`docs.yml`): builds the rustdoc with `-D warnings` and publishes it
   to GitHub Pages on every push to `main`.

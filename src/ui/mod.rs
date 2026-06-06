@@ -14,10 +14,10 @@ pub mod text;
 pub mod theme;
 
 use crate::i18n::{Lang, Tr};
-use crate::ui::animate::{Animation, Player};
+use crate::ui::animate::{Animation, Player, Repeat};
 use crate::ui::gradient::Gradient;
 use crate::ui::scene::SpeechScene;
-use crate::ui::spinner::Thinking;
+use crate::ui::spinner::{SpinnerStyle, Thinking};
 use crate::ui::surface::{Surface, TermSurface};
 use crate::ui::theme::{ColorChoice, Styler, Theme};
 use std::io::{self, IsTerminal};
@@ -206,14 +206,15 @@ impl Ui {
         Player::new(&mut surface, self.animating(), self.settings.speed).play(&scene)
     }
 
-    /// Lets the duck swim into the frame (only when animated; otherwise a no-op).
+    /// Lets the duck swim into the frame and settle with a blink, as one fluid
+    /// entrance (only when animated; otherwise a no-op).
     pub fn swim_in(&mut self, mood: Mood) -> io::Result<()> {
         if !self.animating() {
             return Ok(());
         }
         let mut surface = TermSurface::stdout();
         let width = surface.width() as usize;
-        let anim = duck::swim_in(mood, self.styler, width);
+        let anim = duck::entrance(mood, self.styler, width);
         Player::new(&mut surface, true, self.settings.speed).play(&anim)
     }
 
@@ -248,6 +249,17 @@ impl Ui {
         let mut surface = TermSurface::stdout();
         let spinner = Thinking::new(label, self.styler, cycles);
         Player::new(&mut surface, true, self.settings.speed).play(&spinner)
+    }
+
+    /// Plays a labelled spinner in `style` for two full cycles (demo showcase).
+    ///
+    /// The base [`Thinking`] cycle is wrapped in [`Repeat`], so the cycle is
+    /// defined once and the repeat count stays a separate concern.
+    pub fn spinner_showcase(&mut self, style: SpinnerStyle) -> io::Result<()> {
+        let mut surface = TermSurface::stdout();
+        let base = Thinking::styled(style.name(), self.styler, style.cycle_len(), style);
+        let anim = Repeat::new(Box::new(base), 2);
+        Player::new(&mut surface, self.animating(), self.settings.speed).play(&anim)
     }
 
     fn typewriter_active(&self) -> bool {
