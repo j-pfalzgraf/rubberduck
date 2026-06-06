@@ -1,0 +1,60 @@
+# rubberduck – question pool (English)
+#
+# Edit this file freely: add topics or questions; your team can share it.
+#
+# Format: `topics` maps a topic name to a topic. Each topic may use one of two
+# shapes:
+#   lean:                    rich:
+#     - "Question 1"           description: "Short text for the picker"
+#     - "Question 2"           questions:
+#                               - "Question 1"
+#
+# The default topic is `default`. Reach custom topics via `--topic <name>`.
+
+topics:
+  default:
+    description: "General questions for (almost) any bug."
+    questions:
+      - "What is your code actually supposed to do at this point?"
+      - "What happens instead — concretely?"
+      - "How exactly do you notice something is wrong (error message, wrong value, crash)?"
+      - "Which line or function is the prime suspect — and why that one?"
+      - "Which assumption are you making here that might not hold?"
+      - "What did you change last, right before the bug appeared?"
+      - "With which inputs does it go wrong — and with which does it work?"
+      - "If you print the value in question just before that spot: what do you expect, what do you see?"
+      - "Which part of the problem could you isolate or make smaller?"
+      - "What is the simplest thing you could try next?"
+
+  logic:
+    description: "Logic, loop and condition bugs."
+    questions:
+      - "Are your conditions really correct (==, <, >, parentheses, negations)?"
+      - "Is there an off-by-one error at the boundaries (< vs <=, index 0 vs 1)?"
+      - "Which edge cases haven't you considered yet (empty, null, negative, very large)?"
+      - "Does the loop run as often as you think — one too many or one too few?"
+      - "Is the order of steps right, or does something happen too early or too late?"
+      - "Is a variable being overwritten, or does it secretly keep an old value?"
+      - "If you work the case through by hand on paper: where does the program first diverge?"
+
+  perf:
+    description: "Slow code: runtime, memory, I/O."
+    questions:
+      - "What exactly is slow — and how do you know (measurement or gut feeling)?"
+      - "Did you measure the slow part, or only assume it?"
+      - "Which operation runs most often — is there a loop inside a loop hiding there?"
+      - "Is something computed repeatedly that you could compute once and remember?"
+      - "How does the runtime grow when the input doubles?"
+      - "Is it CPU time, memory, I/O, or the network?"
+      - "Does your data structure fit the access pattern (lookup, insert, ordering)?"
+
+  api:
+    description: "APIs, calls and interfaces."
+    questions:
+      - "What does the documentation say this call returns — and what does it actually do?"
+      - "Are the order, types and units of the arguments correct?"
+      - "Which status code or error response do you get exactly?"
+      - "Do you handle the error case of the response, or only the success case?"
+      - "Are authentication, headers and content type correct?"
+      - "Is it your request, or the other side's response?"
+      - "What does a direct test (curl/Postman) show compared to your code?"

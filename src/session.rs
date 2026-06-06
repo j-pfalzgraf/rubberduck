@@ -1,53 +1,54 @@
-//! Sitzungs-Protokoll: Frage/Antwort mit Zeiten, Statistik, Aha-Moment und
-//! Markdown-Export nach `~/.rubberduck/session-<datum>.md`.
+//! Session log: question/answer with timings, statistics, the aha moment and a
+//! Markdown export to `~/.rubberduck/session-<date>.md`.
 
+use crate::i18n::Tr;
 use crate::paths;
 use anyhow::{Context, Result};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
-/// Eine beantwortete (oder übersprungene) Frage samt Bearbeitungszeit.
+/// One answered (or skipped) question with the time spent on it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Entry {
-    /// Die gestellte Frage.
+    /// The question that was asked.
     pub question: String,
-    /// Die Antwort der Nutzerin (kann leer sein).
+    /// The user's answer (may be empty).
     pub answer: String,
-    /// Wie lange bis zur Antwort gebraucht wurde (Sekunden).
+    /// How long until the answer was given (seconds).
     pub seconds: u64,
 }
 
-/// Der festgehaltene „Aha!“-Moment: der Bug wurde gefunden.
+/// The recorded "aha!" moment: the bug was found.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Aha {
-    /// Kurze Notiz, was es war (optional).
+    /// Short note on what it was (optional).
     pub note: String,
-    /// Nach wie vielen beantworteten Fragen der Groschen fiel.
+    /// After how many answered questions the penny dropped.
     pub after: usize,
-    /// Zeit von Sessionbeginn bis zur Lösung (Sekunden).
+    /// Time from session start to the solution (seconds).
     pub seconds_to_solution: u64,
 }
 
-/// Das vollständige Protokoll einer Session.
+/// The complete log of a session.
 #[derive(Debug, Clone)]
 pub struct Transcript {
-    /// Gewähltes Thema.
+    /// Chosen topic.
     pub topic: String,
-    /// Datum `YYYY-MM-DD` (Dateiname + Überschrift).
+    /// Date `YYYY-MM-DD` (file name + heading).
     pub date: String,
-    /// Menschenlesbarer Startzeitpunkt.
+    /// Human-readable start time.
     pub started_at: String,
-    /// Die Frage/Antwort-Einträge in Reihenfolge.
+    /// The question/answer entries, in order.
     pub entries: Vec<Entry>,
-    /// Der Aha-Moment, falls der Bug gefunden wurde.
+    /// The aha moment, if the bug was found.
     pub aha: Option<Aha>,
-    /// Gesamtdauer der Session (Sekunden).
+    /// Total session duration (seconds).
     pub total_seconds: u64,
 }
 
 impl Transcript {
-    /// Leeres Protokoll für `topic`, gestartet zu `date` / `started_at`.
+    /// Empty log for `topic`, started at `date` / `started_at`.
     #[must_use]
     pub fn new(
         topic: impl Into<String>,
@@ -64,7 +65,7 @@ impl Transcript {
         }
     }
 
-    /// Hängt einen Frage/Antwort-Eintrag an.
+    /// Appends a question/answer entry.
     pub fn push(&mut self, question: impl Into<String>, answer: impl Into<String>, seconds: u64) {
         self.entries.push(Entry {
             question: question.into(),
@@ -73,7 +74,7 @@ impl Transcript {
         });
     }
 
-    /// Verdichtete Kennzahlen der Session.
+    /// Condensed metrics for the session.
     #[must_use]
     pub fn stats(&self) -> Stats {
         let asked = self.entries.len();
@@ -97,22 +98,22 @@ impl Transcript {
     }
 }
 
-/// Verdichtete Kennzahlen einer Session.
+/// Condensed metrics for a session.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Stats {
-    /// Anzahl gestellter Fragen.
+    /// Number of questions asked.
     pub asked: usize,
-    /// Anzahl tatsächlich beantworteter Fragen.
+    /// Number of questions actually answered.
     pub answered: usize,
-    /// Gesamtdauer (Sekunden).
+    /// Total duration (seconds).
     pub total_seconds: u64,
-    /// Durchschnittliche Zeit pro Frage (Sekunden).
+    /// Average time per question (seconds).
     pub avg_seconds: u64,
-    /// Ob der Bug gefunden wurde.
+    /// Whether the bug was found.
     pub solved: bool,
 }
 
-/// Formatiert Sekunden menschenlesbar, z. B. `2m 05s` oder `45s`.
+/// Formats seconds for humans, e.g. `2m 05s` or `45s`.
 #[must_use]
 pub fn format_duration(seconds: u64) -> String {
     let mins = seconds / 60;
@@ -124,45 +125,42 @@ pub fn format_duration(seconds: u64) -> String {
     }
 }
 
-/// Rendert das Protokoll als Markdown.
+/// Renders the log as Markdown in the language of `tr`.
 #[must_use]
-pub fn render_markdown(t: &Transcript) -> String {
+pub fn render_markdown(t: &Transcript, tr: Tr) -> String {
     let stats = t.stats();
     let mut s = String::new();
-    s.push_str(&format!("# 🦆 Rubberduck-Session – {}\n\n", t.date));
-    s.push_str(&format!("- **Thema:** {}\n", t.topic));
-    s.push_str(&format!("- **Gestartet:** {}\n", t.started_at));
+    s.push_str(&tr.md_title(&t.date));
+    s.push_str("\n\n");
+    s.push_str(&format!("- {}\n", tr.md_topic(&t.topic)));
+    s.push_str(&format!("- {}\n", tr.md_started(&t.started_at)));
     s.push_str(&format!(
-        "- **Fragen:** {} beantwortet / {} gestellt\n",
-        stats.answered, stats.asked
+        "- {}\n",
+        tr.md_questions(stats.answered, stats.asked)
     ));
     s.push_str(&format!(
-        "- **Dauer:** {} (Ø {} pro Frage)\n",
-        format_duration(stats.total_seconds),
-        format_duration(stats.avg_seconds)
+        "- {}\n",
+        tr.md_duration(
+            &format_duration(stats.total_seconds),
+            &format_duration(stats.avg_seconds)
+        )
     ));
-    s.push_str(&format!(
-        "- **Gelöst:** {}\n\n",
-        if stats.solved { "✅ ja" } else { "– offen" }
-    ));
+    s.push_str(&format!("- {}\n\n", tr.md_solved(stats.solved)));
 
     if let Some(aha) = &t.aha {
-        s.push_str(&format!(
-            "> 💡 **Aha nach Frage {} ({}):** {}\n\n",
-            aha.after,
-            format_duration(aha.seconds_to_solution),
-            if aha.note.trim().is_empty() {
-                "(keine Notiz)"
-            } else {
-                aha.note.trim()
-            }
-        ));
+        let note = if aha.note.trim().is_empty() {
+            tr.md_no_note()
+        } else {
+            aha.note.trim()
+        };
+        s.push_str(&tr.md_aha(aha.after, &format_duration(aha.seconds_to_solution), note));
+        s.push_str("\n\n");
     }
 
     for (i, entry) in t.entries.iter().enumerate() {
         s.push_str(&format!("### {}. {}\n\n", i + 1, entry.question));
         let answer = if entry.answer.trim().is_empty() {
-            "_(keine Antwort)_"
+            tr.md_no_answer()
         } else {
             entry.answer.trim()
         };
@@ -174,34 +172,35 @@ pub fn render_markdown(t: &Transcript) -> String {
     s
 }
 
-/// Schreibt das Protokoll (gleicher Tag wird angehängt) und gibt den Pfad zurück.
-pub fn write_log(t: &Transcript) -> Result<PathBuf> {
-    write_log_in(&paths::data_dir()?, t)
+/// Writes the log (same day is appended) and returns its path.
+pub fn write_log(t: &Transcript, tr: Tr) -> Result<PathBuf> {
+    write_log_in(&paths::data_dir()?, t, tr)
 }
 
-/// Wie [`write_log`], aber mit explizitem Zielverzeichnis (für Tests).
-fn write_log_in(dir: &Path, t: &Transcript) -> Result<PathBuf> {
+/// Like [`write_log`], but with an explicit target directory (for tests).
+fn write_log_in(dir: &Path, t: &Transcript, tr: Tr) -> Result<PathBuf> {
     fs::create_dir_all(dir)
-        .with_context(|| format!("Konnte Verzeichnis {} nicht anlegen", dir.display()))?;
+        .with_context(|| format!("Could not create directory {}", dir.display()))?;
     let path = dir.join(format!("session-{}.md", t.date));
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
         .open(&path)
-        .with_context(|| format!("Konnte {} nicht öffnen", path.display()))?;
-    file.write_all(render_markdown(t).as_bytes())
-        .with_context(|| format!("Konnte {} nicht schreiben", path.display()))?;
+        .with_context(|| format!("Could not open {}", path.display()))?;
+    file.write_all(render_markdown(t, tr).as_bytes())
+        .with_context(|| format!("Could not write {}", path.display()))?;
     Ok(path)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::i18n::Lang;
 
     fn sample() -> Transcript {
         let mut t = Transcript::new("logic", "2026-06-05", "2026-06-05 14:32");
-        t.push("Was soll es tun?", "Summe bilden", 30);
-        t.push("Was passiert?", "   ", 10);
+        t.push("What should it do?", "Compute the sum", 30);
+        t.push("What happens?", "   ", 10);
         t.total_seconds = 40;
         t
     }
@@ -222,30 +221,38 @@ mod tests {
     }
 
     #[test]
-    fn markdown_contains_sections() {
+    fn markdown_contains_sections_in_english() {
         let mut t = sample();
         t.aha = Some(Aha {
-            note: "Index vertauscht".into(),
+            note: "swapped index".into(),
             after: 2,
             seconds_to_solution: 40,
         });
-        let md = render_markdown(&t);
-        assert!(md.contains("# 🦆 Rubberduck-Session – 2026-06-05"));
+        let md = render_markdown(&t, Tr::new(Lang::English));
+        assert!(md.contains("# 🦆 Rubberduck session – 2026-06-05"));
+        assert!(md.contains("**Topic:** logic"));
+        assert!(md.contains("1 answered / 2 asked"));
+        assert!(md.contains("✅ yes"));
+        assert!(md.contains("💡 **Aha after question 2"));
+        assert!(md.contains("swapped index"));
+        assert!(md.contains("_(no answer)_"));
+    }
+
+    #[test]
+    fn markdown_localizes_to_german() {
+        let md = render_markdown(&sample(), Tr::new(Lang::German));
         assert!(md.contains("**Thema:** logic"));
         assert!(md.contains("1 beantwortet / 2 gestellt"));
-        assert!(md.contains("✅ ja"));
-        assert!(md.contains("💡 **Aha nach Frage 2"));
-        assert!(md.contains("Index vertauscht"));
-        assert!(md.contains("_(keine Antwort)_"));
     }
 
     #[test]
     fn write_log_appends() {
         let dir = tempfile::tempdir().unwrap();
-        let path = write_log_in(dir.path(), &sample()).unwrap();
+        let tr = Tr::new(Lang::English);
+        let path = write_log_in(dir.path(), &sample(), tr).unwrap();
         assert_eq!(path.file_name().unwrap(), "session-2026-06-05.md");
-        write_log_in(dir.path(), &sample()).unwrap();
+        write_log_in(dir.path(), &sample(), tr).unwrap();
         let content = fs::read_to_string(&path).unwrap();
-        assert_eq!(content.matches("Rubberduck-Session").count(), 2);
+        assert_eq!(content.matches("Rubberduck session").count(), 2);
     }
 }

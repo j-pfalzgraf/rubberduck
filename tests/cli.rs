@@ -1,13 +1,14 @@
-//! Integrationstests gegen das gebaute `rubberduck`-Binary.
+//! Integration tests against the built `rubberduck` binary.
 
 use assert_cmd::Command;
 use predicates::str::contains;
 
-/// Baut einen Command mit isolierten Config/Daten-Verzeichnissen und ohne Farbe.
+/// Builds a command with isolated config/data dirs and no colour.
 fn duck(home: &std::path::Path) -> Command {
     let mut cmd = Command::cargo_bin("rubberduck").unwrap();
     cmd.env("RUBBERDUCK_CONFIG_DIR", home.join("config"))
         .env("RUBBERDUCK_DATA_DIR", home.join("data"))
+        .env_remove("RUBBERDUCK_LANG")
         .env("NO_COLOR", "1");
     cmd
 }
@@ -33,6 +34,7 @@ fn help_lists_flags_and_commands() {
         .stdout(contains("--no-anim"))
         .stdout(contains("--speed"))
         .stdout(contains("--theme"))
+        .stdout(contains("--lang"))
         .stdout(contains("topics"))
         .stdout(contains("completions"))
         .stdout(contains("self"));
@@ -50,16 +52,27 @@ fn self_help_lists_subcommands() {
 }
 
 #[test]
-fn topics_lists_all_topics() {
+fn topics_lists_all_topics_in_english() {
     let tmp = tempfile::tempdir().unwrap();
     duck(tmp.path())
         .arg("topics")
         .assert()
         .success()
+        .stdout(contains("Available topics"))
         .stdout(contains("default"))
         .stdout(contains("logic"))
         .stdout(contains("perf"))
         .stdout(contains("api"));
+}
+
+#[test]
+fn topics_localizes_with_lang_flag() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .args(["topics", "--lang", "de"])
+        .assert()
+        .success()
+        .stdout(contains("Verfügbare Themen"));
 }
 
 #[test]
@@ -76,24 +89,33 @@ fn completions_generate_for_bash() {
 fn unknown_topic_fails_with_helpful_message() {
     let tmp = tempfile::tempdir().unwrap();
     duck(tmp.path())
-        .args(["--topic", "gibtsnicht"])
+        .args(["--topic", "does-not-exist"])
         .assert()
         .failure()
-        .stderr(contains("Unbekanntes Thema"))
+        .stderr(contains("Unknown topic"))
         .stderr(contains("default"));
 }
 
 #[test]
-fn first_run_creates_questions_file() {
+fn first_run_creates_english_questions_file() {
     let tmp = tempfile::tempdir().unwrap();
     duck(tmp.path()).args(["--topic", "x"]).assert().failure();
-    assert!(tmp.path().join("config").join("questions.yaml").exists());
+    assert!(tmp.path().join("config").join("questions.en.yaml").exists());
+}
+
+#[test]
+fn first_run_with_german_creates_german_questions_file() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .args(["--lang", "de", "--topic", "x"])
+        .assert()
+        .failure();
+    assert!(tmp.path().join("config").join("questions.de.yaml").exists());
 }
 
 #[test]
 fn quiet_non_tty_session_runs_and_exits_cleanly() {
     let tmp = tempfile::tempdir().unwrap();
-    // Kein TTY (assert_cmd) + leere Eingabe: Session begrüßt und endet sauber.
     duck(tmp.path())
         .args(["--topic", "default", "--quiet"])
         .write_stdin("")

@@ -1,12 +1,12 @@
-//! Binär-Einstiegspunkt für `rubberduck`.
+//! Binary entry point for `rubberduck`.
 //!
-//! Die eigentliche Logik liegt in der Bibliothek `rubberduck_cli`, damit sie
-//! unabhängig vom Terminal getestet werden kann.
+//! The actual logic lives in the `rubberduck_cli` library so it can be tested
+//! independently of a terminal.
 
 fn main() {
     if let Err(err) = rubberduck_cli::run() {
-        // `{err:#}` hängt die anyhow-Ursachenkette mit an.
-        eprintln!("🦆 Fehler: {err:#}");
+        // `{err:#}` appends the anyhow cause chain.
+        eprintln!("🦆 Error: {err:#}");
         std::process::exit(1);
     }
 }

@@ -1,47 +1,51 @@
-//! Laden und Verwalten des Fragen-Pools.
+//! Loading and managing the question pool.
 //!
-//! Der Pool ordnet jedem Thema eine [`Topic`] (Beschreibung + Fragen) zu. Das
-//! YAML-Format unterstützt zwei Schreibweisen pro Thema – eine schlanke Liste
-//! (rückwärtskompatibel) und eine reiche Form mit Beschreibung:
+//! The pool maps each topic name to a [`Topic`] (description + questions). The
+//! YAML format supports two shapes per topic — a lean list (backwards
+//! compatible) and a rich `{description, questions}` form:
 //!
 //! ```yaml
 //! topics:
-//!   schlank:
-//!     - "Nur eine Frageliste."
-//!   reich:
-//!     description: "Mit Beschreibung für den Themen-Picker."
+//!   lean:
+//!     - "Just a list of questions."
+//!   rich:
+//!     description: "With a description for the topic picker."
 //!     questions:
-//!       - "Erste Frage?"
+//!       - "First question?"
 //! ```
+//!
+//! Each language has its own bundled default file (`questions.en.yaml`,
+//! `questions.de.yaml`) and its own user file (`<config>/questions.<code>.yaml`).
 
+use crate::i18n::Lang;
 use crate::paths;
 use anyhow::{anyhow, Context, Result};
 use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-/// Name des Standardthemas.
+/// Name of the default topic (stable across languages).
 pub const DEFAULT_TOPIC: &str = "default";
 
-/// Ein Thema mit Beschreibung und Fragen.
+/// A topic with a description and its questions.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Topic {
-    /// Technischer Name (Schlüssel, via `--topic` erreichbar).
+    /// Technical name (the key; reachable via `--topic`).
     pub name: String,
-    /// Kurzbeschreibung (für den Themen-Picker); kann leer sein.
+    /// Short description (for the topic picker); may be empty.
     pub description: String,
-    /// Die Fragen in Reihenfolge.
+    /// The questions, in order.
     pub questions: Vec<String>,
 }
 
-/// Der gesamte Fragen-Pool, nach Themennamen sortiert.
+/// The whole question pool, sorted by topic name.
 #[derive(Debug, Clone)]
 pub struct QuestionPool {
     topics: BTreeMap<String, Topic>,
 }
 
-/// Roh-Form eines Themas: schlanke Liste **oder** reiche Form (serde-untagged).
+/// Raw form of a topic: a lean list **or** the rich form (serde-untagged).
 #[derive(Debug, Deserialize)]
 #[serde(untagged)]
 enum RawTopic {
@@ -59,9 +63,9 @@ struct RawPool {
 }
 
 impl QuestionPool {
-    /// Parst einen Pool aus YAML-Text (akzeptiert beide Themenschreibweisen).
+    /// Parses a pool from YAML text (accepts both topic shapes).
     pub fn parse(yaml: &str) -> Result<Self> {
-        let raw: RawPool = serde_yaml::from_str(yaml).context("Ungültiges questions.yaml")?;
+        let raw: RawPool = serde_yaml::from_str(yaml).context("Invalid questions YAML")?;
         let topics: BTreeMap<String, Topic> = raw
             .topics
             .into_iter()
@@ -85,77 +89,85 @@ impl QuestionPool {
             })
             .collect();
 
-        // Leere Themen früh ablehnen – sonst gäbe es eine tote Session ohne Fragen.
+        // Reject empty topics early — otherwise they'd be a dead, question-less session.
         for topic in topics.values() {
             if topic.questions.is_empty() {
-                return Err(anyhow!("Thema '{}' enthält keine Fragen.", topic.name));
+                return Err(anyhow!("Topic '{}' has no questions.", topic.name));
             }
         }
         Ok(Self { topics })
     }
 
-    /// Das Thema `name`; Fehler mit Liste verfügbarer Themen, falls unbekannt.
+    /// The topic `name`; error listing available topics if unknown.
     pub fn topic(&self, name: &str) -> Result<&Topic> {
         self.topics.get(name).ok_or_else(|| {
             let available = self.topic_names().join(", ");
-            anyhow!("Unbekanntes Thema '{name}'. Verfügbar: {available}")
+            anyhow!("Unknown topic '{name}'. Available: {available}")
         })
     }
 
-    /// Alle Themen, alphabetisch nach Name sortiert.
+    /// All topics, alphabetically by name.
     pub fn topics(&self) -> impl Iterator<Item = &Topic> {
         self.topics.values()
     }
 
-    /// Die Namen aller Themen (alphabetisch).
+    /// The names of all topics (alphabetical).
     #[must_use]
     pub fn topic_names(&self) -> Vec<&str> {
         self.topics.keys().map(String::as_str).collect()
     }
 
-    /// Anzahl der Themen.
+    /// Number of topics.
     #[must_use]
     pub fn len(&self) -> usize {
         self.topics.len()
     }
 
-    /// Ob der Pool keine Themen enthält.
+    /// Whether the pool has no topics.
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.topics.is_empty()
     }
 }
 
-/// Der im Binary eingebettete Standard-Pool als YAML-Text.
+/// The bundled default pool for `lang`, as embedded YAML text.
 #[must_use]
-pub fn embedded_yaml() -> &'static str {
-    include_str!("../questions.yaml")
+pub fn embedded_yaml(lang: Lang) -> &'static str {
+    match lang {
+        Lang::English => include_str!("../questions.en.yaml"),
+        Lang::German => include_str!("../questions.de.yaml"),
+    }
 }
 
-/// Parst den eingebetteten Standard-Pool.
-pub fn embedded() -> Result<QuestionPool> {
-    QuestionPool::parse(embedded_yaml()).context("Eingebettetes questions.yaml ist ungültig")
+/// Parses the bundled default pool for `lang`.
+pub fn embedded(lang: Lang) -> Result<QuestionPool> {
+    QuestionPool::parse(embedded_yaml(lang)).context("Bundled question pool is invalid")
 }
 
-/// Lädt den Pool aus der Konfigurationsdatei; legt sie beim ersten Mal an.
-pub fn load_or_init() -> Result<QuestionPool> {
-    load_or_init_at(&paths::questions_file()?)
+/// Path of the per-language question file, e.g. `<config>/questions.en.yaml`.
+fn questions_file(lang: Lang) -> Result<PathBuf> {
+    Ok(paths::config_dir()?.join(format!("questions.{}.yaml", lang.code())))
 }
 
-/// Wie [`load_or_init`], aber mit explizitem Pfad (für Tests).
-fn load_or_init_at(path: &Path) -> Result<QuestionPool> {
+/// Loads the pool for `lang`; creates the file on first run so teams can edit it.
+pub fn load_or_init(lang: Lang) -> Result<QuestionPool> {
+    load_or_init_at(&questions_file(lang)?, lang)
+}
+
+/// Like [`load_or_init`], but with an explicit path (for tests).
+fn load_or_init_at(path: &Path, lang: Lang) -> Result<QuestionPool> {
     if !path.exists() {
         if let Some(dir) = path.parent() {
             fs::create_dir_all(dir)
-                .with_context(|| format!("Konnte {} nicht anlegen", dir.display()))?;
+                .with_context(|| format!("Could not create {}", dir.display()))?;
         }
-        fs::write(path, embedded_yaml())
-            .with_context(|| format!("Konnte {} nicht schreiben", path.display()))?;
+        fs::write(path, embedded_yaml(lang))
+            .with_context(|| format!("Could not write {}", path.display()))?;
     }
 
-    let content = fs::read_to_string(path)
-        .with_context(|| format!("Konnte {} nicht lesen", path.display()))?;
-    QuestionPool::parse(&content).with_context(|| format!("Ungültiges YAML in {}", path.display()))
+    let content =
+        fs::read_to_string(path).with_context(|| format!("Could not read {}", path.display()))?;
+    QuestionPool::parse(&content).with_context(|| format!("Invalid YAML in {}", path.display()))
 }
 
 #[cfg(test)]
@@ -163,57 +175,62 @@ mod tests {
     use super::*;
 
     #[test]
-    fn embedded_parses_and_has_topics() {
-        let pool = embedded().unwrap();
-        for name in ["default", "logic", "perf", "api"] {
-            let topic = pool.topic(name).unwrap();
-            assert!(!topic.questions.is_empty(), "Thema {name} ist leer");
-            assert!(
-                !topic.description.is_empty(),
-                "Thema {name} ohne Beschreibung"
-            );
+    fn embedded_parses_for_every_language() {
+        for lang in Lang::ALL {
+            let pool = embedded(lang).unwrap();
+            for name in ["default", "logic", "perf", "api"] {
+                let topic = pool.topic(name).unwrap();
+                assert!(!topic.questions.is_empty(), "{name} empty in {lang}");
+                assert!(
+                    !topic.description.is_empty(),
+                    "{name} has no description in {lang}"
+                );
+            }
         }
     }
 
     #[test]
     fn accepts_both_simple_and_rich() {
-        let yaml = "topics:\n  s:\n    - eins\n    - zwei\n  r:\n    description: Hallo\n    questions:\n      - drei\n";
+        let yaml = "topics:\n  s:\n    - one\n    - two\n  r:\n    description: Hi\n    questions:\n      - three\n";
         let pool = QuestionPool::parse(yaml).unwrap();
         assert_eq!(pool.topic("s").unwrap().questions.len(), 2);
         assert_eq!(pool.topic("s").unwrap().description, "");
-        assert_eq!(pool.topic("r").unwrap().description, "Hallo");
-        assert_eq!(pool.topic("r").unwrap().questions, vec!["drei".to_string()]);
+        assert_eq!(pool.topic("r").unwrap().description, "Hi");
+        assert_eq!(
+            pool.topic("r").unwrap().questions,
+            vec!["three".to_string()]
+        );
     }
 
     #[test]
     fn empty_topic_is_rejected() {
-        let err = QuestionPool::parse("topics:\n  leer:\n    questions: []\n")
+        let err = QuestionPool::parse("topics:\n  empty:\n    questions: []\n")
             .unwrap_err()
             .to_string();
-        assert!(err.contains("keine Fragen"));
+        assert!(err.contains("no questions"));
     }
 
     #[test]
     fn unknown_topic_lists_available() {
-        let pool = embedded().unwrap();
-        let err = pool.topic("gibtsnicht").unwrap_err().to_string();
-        assert!(err.contains("Unbekanntes Thema"));
+        let pool = embedded(Lang::English).unwrap();
+        let err = pool.topic("nope").unwrap_err().to_string();
+        assert!(err.contains("Unknown topic"));
         assert!(err.contains("default"));
     }
 
     #[test]
     fn topics_are_sorted() {
-        let names = embedded().unwrap().topic_names().join(",");
+        let names = embedded(Lang::English).unwrap().topic_names().join(",");
         assert_eq!(names, "api,default,logic,perf");
     }
 
     #[test]
     fn load_or_init_writes_then_reads_back() {
         let dir = tempfile::tempdir().unwrap();
-        let path = dir.path().join("questions.yaml");
-        let first = load_or_init_at(&path).unwrap();
+        let path = dir.path().join("questions.en.yaml");
+        let first = load_or_init_at(&path, Lang::English).unwrap();
         assert!(path.exists());
-        let second = load_or_init_at(&path).unwrap();
+        let second = load_or_init_at(&path, Lang::English).unwrap();
         assert_eq!(first.len(), second.len());
         assert!(second.topic("default").is_ok());
     }

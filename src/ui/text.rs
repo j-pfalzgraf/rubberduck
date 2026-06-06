@@ -1,27 +1,27 @@
-//! Unicode-bewusster Textumbruch und cowsay-artige Sprechblasen.
+//! Unicode-aware text wrapping and cowsay-style speech bubbles.
 //!
-//! Breiten werden über [`unicode_width`] berechnet, damit Umlaute, Emoji und
-//! CJK-Zeichen die Rahmen nicht verschieben.
+//! Widths are computed via [`unicode_width`] so that umlauts, emoji and
+//! CJK characters do not shift the frames.
 
 use unicode_width::UnicodeWidthStr;
 
-/// Anzeige-Breite eines Strings in Terminalspalten.
+/// Display width of a string in terminal columns.
 #[must_use]
 pub fn display_width(s: &str) -> usize {
     UnicodeWidthStr::width(s)
 }
 
-/// Anzeige-Breite ohne ANSI-Escape-Sequenzen (z. B. Farbcodes).
+/// Display width excluding ANSI escape sequences (e.g. colour codes).
 ///
-/// Wird gebraucht, um die *sichtbare* Breite bereits eingefärbter Zeilen zu
-/// messen – etwa damit der In-Place-Redraw weiß, ob eine Zeile umbricht.
+/// Needed to measure the *visible* width of already-coloured lines – for
+/// example so the in-place redraw knows whether a line wraps.
 #[must_use]
 pub fn visible_width(s: &str) -> usize {
     let mut plain = String::with_capacity(s.len());
     let mut chars = s.chars();
     while let Some(c) = chars.next() {
         if c == '\u{1b}' {
-            // CSI-Sequenz `ESC [ … <final 0x40..=0x7e>` überspringen.
+            // Skip the CSI sequence `ESC [ … <final 0x40..=0x7e>`.
             if chars.clone().next() == Some('[') {
                 chars.next();
                 for cc in chars.by_ref() {
@@ -30,7 +30,7 @@ pub fn visible_width(s: &str) -> usize {
                     }
                 }
             } else {
-                // Andere Escape-Sequenz: das nächste Zeichen verwerfen.
+                // Other escape sequence: discard the next character.
                 chars.next();
             }
         } else {
@@ -40,10 +40,10 @@ pub fn visible_width(s: &str) -> usize {
     display_width(&plain)
 }
 
-/// Bricht `text` an Wortgrenzen auf Zeilen mit höchstens `width` Spalten um.
+/// Wraps `text` at word boundaries into lines of at most `width` columns.
 ///
-/// Einzelne, überlange Wörter dürfen die Breite überschreiten (sie werden nicht
-/// hart getrennt). Das Ergebnis enthält immer mindestens eine Zeile.
+/// Individual, overly long words may exceed the width (they are not hard
+/// broken). The result always contains at least one line.
 ///
 /// ```
 /// use rubberduck_cli::ui::text::wrap;
@@ -81,9 +81,9 @@ pub fn wrap(text: &str, width: usize) -> Vec<String> {
     lines
 }
 
-/// Rahmt `text` in eine cowsay-artige Sprechblase (reiner, ungefärbter Text).
+/// Frames `text` in a cowsay-style speech bubble (plain, uncoloured text).
 ///
-/// `width` ist die maximale Textbreite *innerhalb* der Blase.
+/// `width` is the maximum text width *inside* the bubble.
 #[must_use]
 pub fn speech_bubble(text: &str, width: usize) -> Vec<String> {
     let lines = wrap(text, width);
@@ -137,7 +137,7 @@ mod tests {
         assert_eq!(visible_width("\u{1b}[33mAB\u{1b}[0m"), 2);
         assert_eq!(visible_width("AB"), 2);
         assert_eq!(visible_width(""), 0);
-        // gefärbte Ente: sichtbare Breite = 5 ("<( o)")
+        // coloured duck: visible width = 5 ("<( o)")
         assert_eq!(visible_width("\u{1b}[33m<( o)\u{1b}[0m"), 5);
     }
 

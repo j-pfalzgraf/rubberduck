@@ -1,29 +1,29 @@
-//! Bild-für-Bild-Animationen und ihr Abspielen auf einer [`Surface`].
+//! Frame-by-frame animations and playing them on a [`Surface`].
 //!
-//! Eine [`Animation`] liefert beliebig viele [`Frame`]s; der [`Player`] zeichnet
-//! sie an Ort und Stelle neu (Cursor hoch, löschen, neu schreiben). Ist der
-//! Player deaktiviert (kein TTY oder `--no-anim`), wird nur das *letzte* Bild
-//! einmal gezeichnet – so degradiert jede Animation sauber zu statischer Ausgabe.
+//! An [`Animation`] supplies any number of [`Frame`]s; the [`Player`] redraws
+//! them in place (cursor up, clear, rewrite). If the player is disabled (no TTY
+//! or `--no-anim`), only the *last* frame is drawn once – so every animation
+//! degrades cleanly to static output.
 
 use crate::ui::surface::Surface;
 use std::io;
 use std::time::Duration;
 
-/// Ein einzelnes Bild: mehrere (bereits eingefärbte) Textzeilen.
+/// A single frame: several (already colourised) text lines.
 #[derive(Debug, Clone, Default)]
 pub struct Frame {
-    /// Die Zeilen des Bildes (ohne Zeilenumbrüche).
+    /// The lines of the frame (without line breaks).
     pub lines: Vec<String>,
 }
 
 impl Frame {
-    /// Bild aus Zeilen.
+    /// Frame from lines.
     #[must_use]
     pub fn new(lines: Vec<String>) -> Self {
         Self { lines }
     }
 
-    /// Höhe in Zeilen.
+    /// Height in lines.
     #[must_use]
     pub fn height(&self) -> usize {
         self.lines.len()
@@ -36,33 +36,33 @@ impl From<Vec<String>> for Frame {
     }
 }
 
-/// Etwas, das als endliche Folge von Bildern abgespielt werden kann.
+/// Something that can be played back as a finite sequence of frames.
 pub trait Animation {
-    /// Anzahl der Bilder.
+    /// Number of frames.
     fn frame_count(&self) -> usize;
 
-    /// Rendert Bild `i` (0-basiert, `i < frame_count()`).
+    /// Renders frame `i` (0-based, `i < frame_count()`).
     fn frame(&self, i: usize) -> Frame;
 
-    /// Verzögerung *nach* Bild `i` (Standard: 90 ms).
+    /// Delay *after* frame `i` (default: 90 ms).
     fn delay(&self, _i: usize) -> Duration {
         Duration::from_millis(90)
     }
 
-    /// Ob die Animation kein einziges Bild hat.
+    /// Whether the animation has no frame at all.
     fn is_empty(&self) -> bool {
         self.frame_count() == 0
     }
 }
 
-/// Eine Animation aus vorab gerenderten Bildern mit fixer Bildverzögerung.
+/// An animation made of pre-rendered frames with a fixed frame delay.
 pub struct Clip {
     frames: Vec<Frame>,
     delay: Duration,
 }
 
 impl Clip {
-    /// Clip aus Bildern und einheitlicher Verzögerung.
+    /// Clip from frames and a uniform delay.
     #[must_use]
     pub fn new(frames: Vec<Frame>, delay: Duration) -> Self {
         Self { frames, delay }
@@ -81,19 +81,19 @@ impl Animation for Clip {
     }
 }
 
-/// Beschleunigungskurven für Bewegungen; bilden `t ∈ [0,1]` auf `[0,1]` ab.
+/// Easing curves for movements; map `t ∈ [0,1]` onto `[0,1]`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Easing {
-    /// Gleichförmig.
+    /// Uniform.
     Linear,
-    /// Weiches Anfahren und Abbremsen.
+    /// Smooth acceleration and deceleration.
     EaseInOut,
-    /// Federndes Aufschlagen am Ende.
+    /// Springy impact at the end.
     Bounce,
 }
 
 impl Easing {
-    /// Wendet die Kurve auf `t` an (außerhalb `[0,1]` wird geklemmt).
+    /// Applies the curve to `t` (clamped outside `[0,1]`).
     #[must_use]
     pub fn apply(self, t: f32) -> f32 {
         let t = t.clamp(0.0, 1.0);
@@ -126,7 +126,7 @@ impl Easing {
     }
 }
 
-/// Spielt [`Animation`]s auf einer [`Surface`] ab.
+/// Plays [`Animation`]s on a [`Surface`].
 pub struct Player<'a, S: Surface> {
     surface: &'a mut S,
     enabled: bool,
@@ -134,9 +134,8 @@ pub struct Player<'a, S: Surface> {
 }
 
 impl<'a, S: Surface> Player<'a, S> {
-    /// Neuer Player. Bei `enabled=false` wird nur das Endbild gezeichnet; `speed`
-    /// skaliert die Verzögerungen (2.0 = doppelt so schnell). `speed <= 0` gilt
-    /// als 1.0.
+    /// New player. With `enabled=false` only the final frame is drawn; `speed`
+    /// scales the delays (2.0 = twice as fast). `speed <= 0` is treated as 1.0.
     pub fn new(surface: &'a mut S, enabled: bool, speed: f32) -> Self {
         Self {
             surface,
@@ -145,7 +144,7 @@ impl<'a, S: Surface> Player<'a, S> {
         }
     }
 
-    /// Spielt `anim` ab und lässt das Endbild auf dem Schirm stehen.
+    /// Plays `anim` and leaves the final frame on the screen.
     pub fn play(&mut self, anim: &dyn Animation) -> io::Result<()> {
         let count = anim.frame_count();
         if count == 0 {
@@ -157,14 +156,14 @@ impl<'a, S: Surface> Player<'a, S> {
 
         self.surface.hide_cursor()?;
         let result = self.play_frames(anim, count);
-        // Cursor IMMER wiederherstellen – auch wenn das Zeichnen fehlschlug,
-        // sonst bliebe er im Terminal der Nutzerin unsichtbar.
+        // ALWAYS restore the cursor – even if drawing failed, otherwise it would
+        // remain invisible in the user's terminal.
         let _ = self.surface.show_cursor();
         let _ = self.surface.flush();
         result
     }
 
-    /// Zeichnet die Bilder der Reihe nach (Cursor-Handling liegt bei [`Player::play`]).
+    /// Draws the frames in sequence (cursor handling is done by [`Player::play`]).
     fn play_frames(&mut self, anim: &dyn Animation, count: usize) -> io::Result<()> {
         let mut prev_rows = 0u16;
         for i in 0..count {
@@ -185,9 +184,9 @@ impl<'a, S: Surface> Player<'a, S> {
         Ok(())
     }
 
-    /// Zahl der Terminalzeilen, die `frame` belegt – inklusive Soft-Wrapping
-    /// breiter Zeilen. Ohne diese Korrektur verrechnet sich der In-Place-Redraw
-    /// auf schmalen Terminals.
+    /// Number of terminal rows that `frame` occupies – including soft-wrapping of
+    /// wide lines. Without this correction the in-place redraw miscalculates on
+    /// narrow terminals.
     fn frame_rows(&self, frame: &Frame) -> u16 {
         let width = self.surface.width().max(1) as usize;
         let rows: usize = frame
@@ -247,7 +246,7 @@ mod tests {
         let mut surf = BufferSurface::new(40);
         let mut player = Player::new(&mut surf, true, 100.0);
         player.play(&clip()).unwrap();
-        // BufferSurface ignoriert clear -> alle Frames akkumulieren der Reihe nach.
+        // BufferSurface ignores clear -> all frames accumulate in sequence.
         assert!(surf.out.contains("A\n"));
         assert!(surf.out.contains("B\n"));
         assert!(surf.out.ends_with("C-final\n"));

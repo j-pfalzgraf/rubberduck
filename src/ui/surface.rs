@@ -1,49 +1,49 @@
-//! Abstraktion über das Terminal, damit Animationen testbar bleiben.
+//! Abstraction over the terminal so that animations stay testable.
 //!
-//! Der [`crate::ui::animate::Player`] spricht nur dieses [`Surface`]-Trait an.
-//! In Produktion schreibt [`TermSurface`] via crossterm auf stdout; in Tests
-//! sammelt [`BufferSurface`] die Ausgabe im Speicher.
+//! The [`crate::ui::animate::Player`] only talks to this [`Surface`] trait.
+//! In production, [`TermSurface`] writes to stdout via crossterm; in tests
+//! [`BufferSurface`] collects the output in memory.
 
 use std::io::{self, Write};
 
-/// Minimale Terminal-Operationen, die der Animations-Player benötigt.
+/// Minimal terminal operations that the animation player needs.
 pub trait Surface {
-    /// Schreibt `s` ohne Zeilenumbruch.
+    /// Writes `s` without a line break.
     fn write_str(&mut self, s: &str) -> io::Result<()>;
 
-    /// Schreibt `s` mit abschließendem Zeilenumbruch.
+    /// Writes `s` with a trailing line break.
     fn write_line(&mut self, s: &str) -> io::Result<()> {
         self.write_str(s)?;
         self.write_str("\n")
     }
 
-    /// Schreibt gepufferte Ausgaben raus.
+    /// Flushes buffered output.
     fn flush(&mut self) -> io::Result<()>;
 
-    /// Bewegt den Cursor `n` Zeilen nach oben (0 = keine Bewegung).
+    /// Moves the cursor `n` lines up (0 = no movement).
     fn move_up(&mut self, n: u16) -> io::Result<()>;
 
-    /// Löscht alles vom Cursor bis zum Bildschirmende.
+    /// Clears everything from the cursor to the end of the screen.
     fn clear_below(&mut self) -> io::Result<()>;
 
-    /// Versteckt den Cursor (z. B. während einer Animation).
+    /// Hides the cursor (e.g. during an animation).
     fn hide_cursor(&mut self) -> io::Result<()>;
 
-    /// Zeigt den Cursor wieder an.
+    /// Shows the cursor again.
     fn show_cursor(&mut self) -> io::Result<()>;
 
-    /// Aktuelle Terminalbreite in Spalten.
+    /// Current terminal width in columns.
     fn width(&self) -> u16;
 }
 
-/// Schreibt auf ein echtes Terminal (per crossterm-Cursorsteuerung).
+/// Writes to a real terminal (via crossterm cursor control).
 pub struct TermSurface<W: Write> {
     writer: W,
     width: u16,
 }
 
 impl TermSurface<io::Stdout> {
-    /// Surface über stdout mit erkannter Terminalbreite (Fallback: 80).
+    /// Surface over stdout with detected terminal width (fallback: 80).
     #[must_use]
     pub fn stdout() -> Self {
         let width = crossterm::terminal::size().map(|(w, _)| w).unwrap_or(80);
@@ -55,7 +55,7 @@ impl TermSurface<io::Stdout> {
 }
 
 impl<W: Write> TermSurface<W> {
-    /// Surface über einen beliebigen Writer mit fixer Breite.
+    /// Surface over an arbitrary writer with a fixed width.
     pub fn new(writer: W, width: u16) -> Self {
         Self { writer, width }
     }
@@ -100,17 +100,17 @@ impl<W: Write> Surface for TermSurface<W> {
     }
 }
 
-/// Sammelt alle Textausgaben im Speicher – für Tests. Cursor-/Clear-Operationen
-/// sind No-ops.
+/// Collects all text output in memory – for tests. Cursor/clear operations
+/// are no-ops.
 #[derive(Debug, Default)]
 pub struct BufferSurface {
-    /// Die gesammelte (geschriebene) Ausgabe.
+    /// The collected (written) output.
     pub out: String,
     width: u16,
 }
 
 impl BufferSurface {
-    /// Neuer Puffer mit Breite `width`.
+    /// New buffer with width `width`.
     #[must_use]
     pub fn new(width: u16) -> Self {
         Self {

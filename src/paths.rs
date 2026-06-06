@@ -1,38 +1,33 @@
-//! Plattformkonforme Pfade für Konfiguration und Logs.
+//! Platform-appropriate paths for configuration and logs.
 //!
-//! Zwei Umgebungsvariablen erlauben Overrides (praktisch für Tests und
-//! Power-User): `RUBBERDUCK_CONFIG_DIR` und `RUBBERDUCK_DATA_DIR`.
+//! Two environment variables allow overrides (handy for tests and power users):
+//! `RUBBERDUCK_CONFIG_DIR` and `RUBBERDUCK_DATA_DIR`.
 
 use anyhow::{Context, Result};
 use directories::BaseDirs;
 use std::path::PathBuf;
 
-/// Konfigurationsverzeichnis `~/.config/rubberduck` – auf allen Plattformen
-/// gleich (gemäß Spec und identisch zu install/uninstall-Skripten und README).
+/// Config directory `~/.config/rubberduck` – identical on all platforms (per the
+/// spec and matching the install/uninstall scripts and the README).
 pub fn config_dir() -> Result<PathBuf> {
     if let Ok(p) = std::env::var("RUBBERDUCK_CONFIG_DIR") {
         return Ok(PathBuf::from(p));
     }
-    let dirs = BaseDirs::new().context("Konnte das Home-Verzeichnis nicht bestimmen")?;
+    let dirs = BaseDirs::new().context("Could not determine the home directory")?;
     Ok(dirs.home_dir().join(".config").join("rubberduck"))
 }
 
-/// Pfad zur Fragen-Datei (`<config>/questions.yaml`).
-pub fn questions_file() -> Result<PathBuf> {
-    Ok(config_dir()?.join("questions.yaml"))
-}
-
-/// Pfad zur Einstellungsdatei (`<config>/config.yaml`).
+/// Path to the settings file (`<config>/config.yaml`).
 pub fn config_file() -> Result<PathBuf> {
     Ok(config_dir()?.join("config.yaml"))
 }
 
-/// Datenverzeichnis `~/.rubberduck` (bewusst nicht XDG, gemäß Spec).
+/// Data directory `~/.rubberduck` (deliberately not XDG, per the spec).
 pub fn data_dir() -> Result<PathBuf> {
     if let Ok(p) = std::env::var("RUBBERDUCK_DATA_DIR") {
         return Ok(PathBuf::from(p));
     }
-    let dirs = BaseDirs::new().context("Konnte das Home-Verzeichnis nicht bestimmen")?;
+    let dirs = BaseDirs::new().context("Could not determine the home directory")?;
     Ok(dirs.home_dir().join(".rubberduck"))
 }
 
@@ -48,8 +43,8 @@ mod tests {
             PathBuf::from("/tmp/rubberduck-test-cfg")
         );
         assert_eq!(
-            questions_file().unwrap(),
-            PathBuf::from("/tmp/rubberduck-test-cfg/questions.yaml")
+            config_file().unwrap(),
+            PathBuf::from("/tmp/rubberduck-test-cfg/config.yaml")
         );
         std::env::remove_var("RUBBERDUCK_CONFIG_DIR");
     }

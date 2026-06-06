@@ -1,8 +1,8 @@
-//! Zusammengesetzte Szene: Sprechblase (Tippeffekt) über der animierten Ente.
+//! Composite scene: speech bubble (typewriter effect) above the animated duck.
 //!
-//! [`SpeechScene`] ist selbst eine [`Animation`]: Bild `i` zeigt die ersten `i`
-//! Zeichen des Texts, während die Ente darunter gelegentlich blinzelt. Ohne
-//! Tippeffekt besteht die Animation aus genau einem Bild (sofort vollständig).
+//! [`SpeechScene`] is itself an [`Animation`]: frame `i` shows the first `i`
+//! characters of the text, while the duck below blinks occasionally. Without
+//! the typewriter effect, the animation consists of exactly one frame (complete immediately).
 
 use crate::ui::animate::{Animation, Frame};
 use crate::ui::duck::{self, Mood};
@@ -10,10 +10,10 @@ use crate::ui::text;
 use crate::ui::theme::Styler;
 use std::time::Duration;
 
-/// Anzahl zusätzlicher „Halte“-Bilder nach dem Austippen (für ein Blinzeln).
+/// Number of additional "hold" frames after typing finishes (for a blink).
 const HOLD_FRAMES: usize = 6;
 
-/// Eine Frage-Szene: die Ente „spricht“ den Text Zeichen für Zeichen aus.
+/// A question scene: the duck "speaks" the text character by character.
 pub struct SpeechScene {
     text: Vec<char>,
     bubble_width: usize,
@@ -23,7 +23,7 @@ pub struct SpeechScene {
 }
 
 impl SpeechScene {
-    /// Neue Szene. `typewriter=false` zeigt sofort den ganzen Text (ein Bild).
+    /// New scene. `typewriter=false` shows the whole text immediately (one frame).
     #[must_use]
     pub fn new(
         text: &str,
@@ -75,7 +75,7 @@ impl Animation for SpeechScene {
 
     fn frame(&self, i: usize) -> Frame {
         let revealed = self.revealed(i);
-        // Während des Tippens Auge offen; in der Halte-Phase gelegentlich blinzeln.
+        // Eye open while typing; blink occasionally during the hold phase.
         let done_at = self.text.len();
         let eye = if self.typewriter && i >= done_at && (i - done_at) % 2 == 1 {
             duck::blink_eye(self.mood)
@@ -87,7 +87,7 @@ impl Animation for SpeechScene {
 
     fn delay(&self, i: usize) -> Duration {
         match self.text.get(i) {
-            // Natürlicher Rhythmus: nach Satzzeichen kurz innehalten.
+            // Natural rhythm: pause briefly after punctuation marks.
             Some('.' | '!' | '?') => Duration::from_millis(180),
             Some(',' | ';' | ':') => Duration::from_millis(110),
             Some(_) => Duration::from_millis(22),
@@ -107,10 +107,10 @@ mod tests {
 
     #[test]
     fn non_typewriter_is_single_full_frame() {
-        let scene = SpeechScene::new("Hallo Ente", 40, Mood::Idle, styler(), false);
+        let scene = SpeechScene::new("Hello duck", 40, Mood::Idle, styler(), false);
         assert_eq!(scene.frame_count(), 1);
         let f = scene.frame(0);
-        assert!(f.lines.iter().any(|l| l.contains("Hallo Ente")));
+        assert!(f.lines.iter().any(|l| l.contains("Hello duck")));
         assert!(f.lines.iter().any(|l| l.contains("<( o)")));
     }
 

@@ -1,12 +1,12 @@
 # 🦆 rubberduck
 
-> Offline Rubber-Duck-Debugging fürs Terminal – eine **animierte** ASCII-Ente
-> stellt dir strukturierte Rückfragen, bis du den Bug selbst findest.
+> Offline rubber-duck debugging for your terminal — an **animated** ASCII duck
+> asks you structured questions until you find the bug yourself.
 
 ```text
  ____________________________________
-/ Was soll dein Code hier eigentlich \
-\ tun?                               /
+/ What is your code actually          \
+\ supposed to do here?                /
  ------------------------------------
     \
      \
@@ -18,76 +18,80 @@
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Version](https://img.shields.io/badge/version-0.1.0-green)
 
-> Die Badges sind generische [shields.io](https://shields.io)-Platzhalter.
+> The badges are generic [shields.io](https://shields.io) placeholders.
 >
-> **Hinweis (Platzhalter):** `j-pfalzgraf/rubberduck` ist im gesamten Dokument
-> ein Platzhalter für dein eigenes GitHub-`owner/repo`. Ersetze ihn überall, wo
-> er in URLs oder Befehlen auftaucht, durch deine tatsächlichen Werte.
+> **Note (placeholder):** `j-pfalzgraf/rubberduck` is a placeholder for your own
+> GitHub `owner/repo` throughout this document. Replace it wherever it appears in
+> URLs or commands with your actual values.
 
-## Was ist das?
+## What is this?
 
-`rubberduck` ist ein kleiner Begleiter fürs Terminal nach dem Prinzip des
-[Rubber-Duck-Debuggings](https://de.wikipedia.org/wiki/Rubber_Duck_Debugging):
-Statt einem Kollegen erklärst du dein Problem einer Ente. Sie tippt dir –
-sichtbar Zeichen für Zeichen – strukturierte Fragen in eine Sprechblase,
-schwimmt ins Bild, blinzelt, quakt und feiert mit dir den Moment, in dem der
-Groschen fällt.
+`rubberduck` is a small terminal companion based on
+[rubber-duck debugging](https://en.wikipedia.org/wiki/Rubber_duck_debugging):
+instead of a colleague, you explain your problem to a duck. It types structured
+questions into a speech bubble — visibly, character by character — swims in,
+blinks, quacks, and celebrates the moment the penny drops with you.
 
-Alle Sessions laufen **komplett offline**, ohne externe KI und ohne Netzwerk.
-Nur das eingebaute Selbst-Update lädt – auf ausdrücklichen Wunsch – etwas herunter.
+Every session runs **fully offline**, with no external AI and no network. Only
+the built-in self-update downloads anything, and only when you ask it to.
+
+The interface is **internationalized and defaults to English**; German ships
+bundled (`--lang de`).
 
 ## Features
 
-- 🦆 **Animierte ASCII-Ente** – schwimmt ins Bild, blinzelt, quakt; Tippeffekt
-  für die Fragen. Degradiert sauber zu statischer/`--quiet`-Ausgabe ohne Terminal.
-- 💬 **Interaktiver Frage-Dialog** – Schritt für Schritt durch dein Problem.
-- 🎨 **Themes & Farben** – `classic`, `midnight`, `mono`; respektiert `NO_COLOR`.
-- 🧭 **Themen-Auswahl** – interaktiver Picker oder direkt per `--topic`.
-- 💡 **Aha-Moment** – tippe `!aha`, wenn du den Bug gefunden hast: Feier-Animation
-  und ein Marker im Logbuch.
-- 📊 **Statistik** – Zeit bis zur Lösung und pro Frage in der Zusammenfassung.
-- 📝 **Markdown-Logbuch** – optional via `--log`, inkl. Statistik & Aha-Notiz.
-- 🧩 **Editierbare `questions.yaml`** mit Themen & Beschreibungen.
-- ⚙️ **Einstellungen** in `config.yaml` (Theme, Tempo, Farbe …).
-- 🐚 **Shell-Completions** für bash, zsh, fish, PowerShell, elvish.
-- 🔄 **Self-Update & Uninstall** – `rubberduck self update` / `self uninstall`.
-- 🔌 **Komplett offline** für alle Sessions.
+- 🦆 **Animated ASCII duck** — swims in, blinks, quacks; typewriter effect for the
+  questions. Degrades cleanly to static / `--quiet` output without a terminal.
+- 🌍 **Internationalized** — English by default, German included; pick with
+  `--lang`, `config.yaml`, or `RUBBERDUCK_LANG`.
+- 💬 **Interactive question dialog** — step by step through your problem.
+- 🎨 **Themes & colours** — `classic`, `midnight`, `mono`; honours `NO_COLOR`.
+- 🧭 **Topic selection** — interactive picker or `--topic` directly.
+- 💡 **Aha moment** — type `!aha` when you find the bug: a celebration animation
+  and a marker in the log.
+- 📊 **Statistics** — time to solution and per question in the summary.
+- 📝 **Markdown log** — optional via `--log`, including stats & the aha note.
+- 🧩 **Editable question pool** with topics & descriptions, per language.
+- ⚙️ **Settings** in `config.yaml` (theme, speed, colour, language …).
+- 🐚 **Shell completions** for bash, zsh, fish, PowerShell, elvish.
+- 🔄 **Self-update & uninstall** — `rubberduck self update` / `self uninstall`.
+- 🔌 **Fully offline** for all sessions.
 
-## So sieht eine Session aus
+## What a session looks like
 
 ```text
  ___________________
-/ Steckt an den     \
-| Grenzen ein       |
-| Off-by-One-Fehler |
-\ (< statt <=)?     /
+/ Is there an        \
+| off-by-one error   |
+| at the boundaries  |
+\ (< vs <=)?         /
  -------------------
     \
      \
   __
 <( o)___
  (___/
-  Du: !aha index war 1 zu groß
+  You: !aha index was one too large
 
-   ✦  HEUREKA!  ✦
+   ✦  EUREKA!  ✦
   \ ✨ /
   __
 <( ^)___
  (___/
    \o/  \o/  \o/
 
-──────── Zusammenfassung ────────
-  • 4 / 5 Fragen beantwortet
-  • Dauer: 3m 12s (Ø 38s pro Frage)
-  • ✅ Bug gefunden
+──────── Summary ────────
+  • 4 / 5 questions answered
+  • Duration: 3m 12s (38s avg per question)
+  • ✅ Bug found
 ```
 
 ## Installation
 
-### Schnellinstallation (curl | sh / PowerShell)
+### One-liners (curl | sh / PowerShell)
 
-> Die `j-pfalzgraf/rubberduck`-URL ist ein **Platzhalter** – bitte durch dein
-> `owner/repo` ersetzen.
+> The `j-pfalzgraf/rubberduck` URL is a **placeholder** — replace it with your
+> `owner/repo`.
 
 **Linux / macOS:**
 
@@ -101,105 +105,121 @@ curl -fsSL https://raw.githubusercontent.com/j-pfalzgraf/rubberduck/main/install
 irm https://raw.githubusercontent.com/j-pfalzgraf/rubberduck/main/install.ps1 | iex
 ```
 
-### Über Cargo
+### Via Cargo
 
 ```sh
 cargo install rubberduck-cli
 ```
 
-(Das Crate heißt `rubberduck-cli`, das installierte Binary heißt `rubberduck`.)
+(The crate is `rubberduck-cli`, the installed binary is `rubberduck`.)
 
 ### Homebrew
 
-Ein `brew tap` ist **geplant/optional** und noch nicht verfügbar.
+A `brew tap` is **planned/optional** and not available yet.
 
-### Installationsverzeichnisse & PATH
+### Install directories & PATH
 
-| Plattform     | Installationsverzeichnis             |
+| Platform      | Install directory                    |
 | ------------- | ------------------------------------ |
 | Linux / macOS | `~/.local/bin`                       |
 | Windows       | `%LOCALAPPDATA%\Programs\rubberduck` |
 
-> **PATH-Hinweis:** Liegt das Verzeichnis nicht in deinem `PATH`, weisen die
-> Installer dich darauf hin.
+> **PATH note:** if the directory is not on your `PATH`, the installers tell you.
 
-## Sicherheit
+## Security
 
-- Jedes Release liefert eine `SHA256SUMS`-Datei mit den Prüfsummen aller Assets.
-- Die Installer geben **vor jeder Aktion** Version und Quelle aus, laden nur über
-  **HTTPS** und **verifizieren die SHA256-Prüfsumme, bevor** installiert wird.
-- `rubberduck self update` lädt das Release über **HTTPS/TLS** von GitHub; eine
-  Signatur-Verifikation für `self update` ist als Härtung geplant (siehe „Geplant“).
-- Wie immer bei `curl | sh`: **Lies das Skript zuerst**, bevor du es ausführst.
+- Every release ships a `SHA256SUMS` file with checksums for all assets.
+- The installers print the version and source **before any action**, download
+  over **HTTPS only**, and **verify the SHA256 checksum before** installing.
+- `rubberduck self update` downloads the release over **HTTPS/TLS** from GitHub;
+  signature verification for `self update` is planned (see "Planned").
+- As always with `curl | sh`: **read the script first** before running it.
 
-## Verwendung
+## Usage
 
-| Befehl                             | Beschreibung                                  |
-| ---------------------------------- | --------------------------------------------- |
-| `rubberduck`                       | Session starten (Themen-Picker, falls kein `--topic`) |
-| `rubberduck --topic logic`         | direkt mit einem Fragenset (`default`/`logic`/`perf`/`api`) |
-| `rubberduck --log`                 | Session als Markdown speichern                |
-| `rubberduck --quiet`               | ohne Ente/Animation, nur knapper Text         |
-| `rubberduck --no-anim`             | statische Ente (kein Tippeffekt/Schwimmen)    |
-| `rubberduck --speed fast`          | Animationstempo (`slow`/`normal`/`fast`)      |
-| `rubberduck --color never`         | Farbe erzwingen/abschalten (`auto`/`always`/`never`) |
-| `rubberduck --theme midnight`      | Farbschema (`classic`/`midnight`/`mono`)      |
-| `rubberduck topics`                | verfügbare Themen mit Beschreibung anzeigen   |
-| `rubberduck completions zsh`       | Shell-Completions ausgeben                    |
-| `rubberduck --version`             | Version anzeigen                              |
-| `rubberduck self update [--check]` | aktualisieren (`--check`: nur prüfen)         |
-| `rubberduck self uninstall`        | rubberduck samt Konfiguration und Logs entfernen |
+| Command                            | Description                                       |
+| ---------------------------------- | ------------------------------------------------- |
+| `rubberduck`                       | start a session (topic picker if no `--topic`)    |
+| `rubberduck --topic logic`         | a question set directly (`default`/`logic`/`perf`/`api`) |
+| `rubberduck --lang de`             | switch the language (`en` / `de`)                 |
+| `rubberduck --log`                 | save the session as Markdown                      |
+| `rubberduck --quiet`               | no duck/animation, just concise text              |
+| `rubberduck --no-anim`             | static duck (no typewriter/swim)                  |
+| `rubberduck --speed fast`          | animation speed (`slow`/`normal`/`fast`)          |
+| `rubberduck --color never`         | force/disable colour (`auto`/`always`/`never`)    |
+| `rubberduck --theme midnight`      | colour scheme (`classic`/`midnight`/`mono`)       |
+| `rubberduck topics`                | show the available topics with descriptions       |
+| `rubberduck completions zsh`       | print shell completions                           |
+| `rubberduck config show`           | show settings (`init`/`show`/`path`)              |
+| `rubberduck --version`             | print the version                                 |
+| `rubberduck self update [--check]` | update (`--check`: check only)                    |
+| `rubberduck self uninstall`        | remove rubberduck along with config and logs      |
 
-## Der Aha-Moment
+## Languages (i18n)
 
-Sobald du den Bug gefunden hast, **tippe `!aha`** als Antwort (optional mit
-Notiz, z. B. `!aha index war 1 zu groß`). Die Ente feiert kurz und markiert den
-Moment im Logbuch. Am Ende einer Session fragt sie ohnehin nach, ob du fündig
-wurdest. In der Zusammenfassung siehst du die Zeit bis zur Lösung und den
-Schnitt pro Frage.
+English is the default. German is bundled. The language is resolved as:
 
-## Animationen & Aussehen
+**`--lang` flag › `RUBBERDUCK_LANG` env › `config.yaml` › English.**
 
-- **`--theme`** `classic` (gelbe Ente), `midnight` (dunkel, RGB) oder `mono`.
-- **`--speed`** `slow` / `normal` / `fast` steuert das Tempo.
-- **`--no-anim`** zeigt alles statisch (eine Ente, kein Tippeffekt) – praktisch
-  über SSH oder bei langsamen Terminals.
-- **`--color`** `auto` (Standard) / `always` / `never`. Ohne Terminal (Pipe, CI)
-  und bei gesetztem `NO_COLOR` wird automatisch nicht eingefärbt, und Animationen
-  reduzieren sich auf statische Ausgabe.
+```sh
+rubberduck --lang de             # German for this run
+RUBBERDUCK_LANG=de rubberduck    # via environment
+```
 
-## Themen
+To make it permanent, set `language: de` in `config.yaml` (see below). Each
+language has its own question pool file, so you can curate questions per
+language.
 
-Mit `rubberduck topics` siehst du alle Themen samt Beschreibung (`*` markiert das
-Standardthema). Ohne `--topic` und in einem echten Terminal erscheint ein
-interaktiver Auswahl-Picker.
+## The aha moment
 
-## Fragen anpassen
+Once you find the bug, **type `!aha`** as your answer (optionally with a note,
+e.g. `!aha index was one too large`). The duck celebrates briefly and marks the
+moment in the log. At the end of a session it also asks whether you found it. The
+summary shows the time to solution and the average per question.
 
-Der Fragen-Pool liegt in `~/.config/rubberduck/questions.yaml` und wird beim
-ersten Start angelegt. Pro Thema sind zwei Schreibweisen erlaubt:
+## Animations & appearance
+
+- **`--theme`** `classic` (yellow duck), `midnight` (dark, RGB) or `mono`.
+- **`--speed`** `slow` / `normal` / `fast` controls the pace.
+- **`--no-anim`** shows everything statically (one duck, no typewriter) — handy
+  over SSH or on slow terminals.
+- **`--color`** `auto` (default) / `always` / `never`. Without a terminal (pipe,
+  CI) and when `NO_COLOR` is set, output is not coloured and animations fall back
+  to static rendering.
+
+## Topics
+
+`rubberduck topics` shows all topics with their descriptions (`*` marks the
+default). Without `--topic`, and in a real terminal, an interactive picker
+appears.
+
+## Editing questions
+
+The question pool lives at `~/.config/rubberduck/questions.<lang>.yaml`
+(e.g. `questions.en.yaml`) and is created on first run. Each topic may use one of
+two shapes:
 
 ```yaml
 topics:
-  # schlanke Form: nur eine Frageliste
+  # lean form: just a list of questions
   default:
-    - "Was soll dein Code hier eigentlich tun?"
-    - "Was passiert stattdessen – ganz konkret?"
+    - "What is your code actually supposed to do here?"
+    - "What happens instead — concretely?"
 
-  # reiche Form: mit Beschreibung für den Themen-Picker
-  mein-team:
-    description: "Hausinterne Checkliste"
+  # rich form: with a description for the topic picker
+  my-team:
+    description: "House checklist"
     questions:
-      - "Hast du das Feature-Flag geprüft?"
-      - "Steht der Eintrag schon im Changelog?"
+      - "Did you check the feature flag?"
+      - "Is the changelog entry there yet?"
 ```
 
-Eigene Themen erreichst du über `--topic <name>`, z. B. `rubberduck --topic mein-team`.
+Reach custom topics via `--topic <name>`, e.g. `rubberduck --topic my-team`.
 
-## Einstellungen (`config.yaml`)
+## Settings (`config.yaml`)
 
-Persistente Vorlieben kommen nach `~/.config/rubberduck/config.yaml`. CLI-Flags
-haben immer Vorrang. Beispiel mit den Standardwerten:
+Persistent preferences go to `~/.config/rubberduck/config.yaml`. CLI flags always
+win. Manage it with `rubberduck config init|show|path`. Example with the defaults:
 
 ```yaml
 color: auto          # auto | always | never
@@ -208,99 +228,102 @@ animations: true
 speed: normal        # slow | normal | fast
 typewriter: true
 default_topic: default
+language: en          # en | de
 ```
 
-Eine kaputte `config.yaml` legt rubberduck nicht lahm – es meldet das einmal und
-nutzt die Standardwerte.
+A broken `config.yaml` does not take rubberduck down — it reports it once and
+uses the defaults.
 
-## Logbuch
+## Log
 
-Mit `--log` wird die Session als Markdown unter
-`~/.rubberduck/session-<datum>.md` gespeichert (z. B. `session-2026-06-05.md`),
-inklusive Thema, Dauer, Statistik, Aha-Notiz und allen Frage/Antwort-Paaren.
-Mehrere Sessions am selben Tag werden angehängt.
+With `--log` the session is saved as Markdown under
+`~/.rubberduck/session-<date>.md` (e.g. `session-2026-06-05.md`), including topic,
+duration, statistics, the aha note and all question/answer pairs, in the active
+language. Multiple sessions on the same day are appended.
 
-## Shell-Completions
+## Shell completions
 
 ```sh
-# bash (z. B. systemweit)
+# bash (e.g. system-wide)
 rubberduck completions bash | sudo tee /etc/bash_completion.d/rubberduck
 
-# zsh (in einen $fpath-Ordner)
+# zsh (into a $fpath directory)
 rubberduck completions zsh > ~/.zfunc/_rubberduck
 
 # fish
 rubberduck completions fish > ~/.config/fish/completions/rubberduck.fish
 ```
 
-Unterstützt: `bash`, `zsh`, `fish`, `powershell`, `elvish`.
+Supported: `bash`, `zsh`, `fish`, `powershell`, `elvish`.
 
-## Update & Deinstallation
+## Update & uninstall
 
-- **Update:** `rubberduck self update` (mit `--check` nur prüfen).
-- **Deinstallation:** `rubberduck self uninstall` entfernt Binary, Konfiguration
-  und Logs (nach Rückfrage). Alternativ als Einzeiler:
+- **Update:** `rubberduck self update` (with `--check` to only check).
+- **Uninstall:** `rubberduck self uninstall` removes the binary, configuration
+  and logs (after confirmation). Or the one-liner:
 
   ```sh
   curl -fsSL https://raw.githubusercontent.com/j-pfalzgraf/rubberduck/main/uninstall.sh | sh
   ```
 
-> Updates passieren **ausschließlich auf ausdrücklichen Befehl** – nie still im
-> Hintergrund.
+> Updates happen **only on an explicit command** — never silently in the
+> background.
 
-## Aus dem Quellcode bauen
+## Building from source
 
 ```sh
 cargo build --release
 ```
 
-Das Binary liegt dann unter `target/release/rubberduck` (Windows: `.exe`).
+The binary is then at `target/release/rubberduck` (Windows: `.exe`).
 
-- **Portable Builds:** Das Feature `vendored-openssl` baut OpenSSL statisch ein
-  (`cargo build --release --features vendored-openssl`) – ideal für portable
-  Linux-Binaries und Cross-Compiles. macOS/Windows brauchen das nicht (Secure
-  Transport bzw. SChannel).
-- **Toolchain:** Es wird **kein `cmake`** benötigt; lokal baut der Standardpfad
-  gegen System-OpenSSL.
+- **Portable builds:** the `vendored-openssl` feature builds OpenSSL statically
+  (`cargo build --release --features vendored-openssl`) — ideal for portable
+  Linux binaries and cross-compiles. macOS/Windows don't need it (Secure
+  Transport / SChannel).
+- **Toolchain:** no `cmake` is required; locally the default path builds against
+  the system OpenSSL.
 
-## Architektur
+## Architecture
 
-Klar getrennte Schichten, trait-basiert und testbar:
+Clearly separated layers, trait-based and testable:
 
-| Modul         | Aufgabe                                                            |
+| Module        | Responsibility                                                    |
 | ------------- | ----------------------------------------------------------------- |
-| `ui::theme`   | Farbschemata + `Styler` (Farbe an/aus, `NO_COLOR`)                |
-| `ui::surface` | `Surface`-Trait: `TermSurface` (crossterm) / `BufferSurface` (Tests) |
-| `ui::animate` | `Animation`-Trait, `Player`, `Frame`, `Easing`                    |
-| `ui::duck`    | DRY-Pose-Builder + Schwimm-/Quak-/Feier-Animationen               |
-| `ui::scene`   | `SpeechScene`: Tippeffekt-Sprechblase über lebender Ente          |
-| `ui` (`Ui`)   | Fassade: löst TTY/Farbe auf, degradiert sauber                    |
-| `app`         | Controller: Themenwahl, Frage-Dialog, Aha, Statistik              |
-| `questions` / `session` / `config` | Daten- und Zustandsschicht                   |
-| `cli` / `selfcmd` / `paths` | Argumente, Update/Deinstallation, Pfade            |
+| `i18n`        | languages (`Lang`) and the `Tr` translator (all user strings)     |
+| `ui::theme`   | colour schemes + `Styler` (colour on/off, `NO_COLOR`)             |
+| `ui::surface` | `Surface` trait: `TermSurface` (crossterm) / `BufferSurface` (tests) |
+| `ui::animate` | `Animation` trait, `Player`, `Frame`, `Easing`                    |
+| `ui::duck`    | DRY pose builder + swim/quack/celebrate animations                |
+| `ui::scene`   | `SpeechScene`: typewriter speech bubble over a live duck          |
+| `ui` (`Ui`)   | facade: resolves TTY/colour, degrades cleanly                     |
+| `app`         | controller: topic selection, question dialog, aha, statistics     |
+| `questions` / `session` / `config` | data and state layer                         |
+| `cli` / `selfcmd` / `paths` | arguments, update/uninstall, paths                 |
 
-Die Animations-Engine kennt nur das `Surface`-Trait – deshalb läuft sie in Tests
-gegen einen Speicherpuffer statt gegen ein echtes Terminal.
+The animation engine only knows the `Surface` trait — which is why it runs in
+tests against an in-memory buffer instead of a real terminal.
 
-## Konfiguration & Datenablage
+## Configuration & data locations
 
-| Zweck            | Pfad                                  | Inhalt                |
-| ---------------- | ------------------------------------- | --------------------- |
-| Fragen           | `~/.config/rubberduck/questions.yaml` | Themen & Fragen       |
-| Einstellungen    | `~/.config/rubberduck/config.yaml`    | Theme, Tempo, Farbe … |
-| Logs / Daten     | `~/.rubberduck/`                      | `session-<datum>.md`  |
-| Override Config  | `$RUBBERDUCK_CONFIG_DIR`              | überschreibt Config-Pfad |
-| Override Daten   | `$RUBBERDUCK_DATA_DIR`                | überschreibt Daten-Pfad  |
+| Purpose          | Path                                       | Contents            |
+| ---------------- | ------------------------------------------ | ------------------- |
+| Questions        | `~/.config/rubberduck/questions.<lang>.yaml` | topics & questions  |
+| Settings         | `~/.config/rubberduck/config.yaml`         | theme, speed, lang … |
+| Logs / data      | `~/.rubberduck/`                           | `session-<date>.md` |
+| Config override  | `$RUBBERDUCK_CONFIG_DIR`                   | overrides config path |
+| Data override    | `$RUBBERDUCK_DATA_DIR`                     | overrides data path |
+| Language override | `$RUBBERDUCK_LANG`                        | `en` / `de`         |
 
-> Die Pfade sind plattformübergreifend gleich aufgebaut. Unter Windows steht `~`
-> für `%USERPROFILE%`.
+> The paths are laid out the same on every platform. On Windows `~` stands for
+> `%USERPROFILE%`.
 
-## Geplant
+## Planned
 
-- Signatur-Verifikation (ed25519) für `rubberduck self update`
-- Homebrew-Tap
-- Weitere Enten-Stimmungen und Themes
+- Signature verification (ed25519) for `rubberduck self update`
+- Homebrew tap
+- More duck moods, themes and languages
 
-## Lizenz
+## License
 
-Lizenz: **MIT** – siehe [LICENSE](LICENSE).
+License: **MIT** — see [LICENSE](LICENSE).

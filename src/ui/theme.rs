@@ -1,26 +1,26 @@
-//! Farbschemata und das Einfärben von Ausgaben.
+//! Color schemes and the coloring of output.
 //!
-//! [`ColorChoice`] entscheidet, *ob* gefärbt wird (mit `NO_COLOR`-Unterstützung),
-//! [`Theme`] legt die Palette fest und [`Styler`] wendet sie an. Ist Farbe
-//! deaktiviert, geben alle Styler-Methoden den Text unverändert zurück – die
-//! Ausgabe bleibt damit pipe- und logfreundlich.
+//! [`ColorChoice`] decides *whether* coloring happens (with `NO_COLOR` support),
+//! [`Theme`] defines the palette, and [`Styler`] applies it. When color is
+//! disabled, all styler methods return the text unchanged – this keeps the
+//! output pipe- and log-friendly.
 
 use crossterm::style::Color;
 use std::io::IsTerminal;
 
-/// Steuert, wann farbige Ausgaben erzeugt werden.
+/// Controls when colored output is produced.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ColorChoice {
-    /// Farbe nur, wenn stdout ein Terminal ist und `NO_COLOR` nicht gesetzt ist.
+    /// Color only when stdout is a terminal and `NO_COLOR` is not set.
     Auto,
-    /// Immer farbig (auch in Pipes).
+    /// Always colored (even in pipes).
     Always,
-    /// Niemals farbig.
+    /// Never colored.
     Never,
 }
 
 impl ColorChoice {
-    /// Löst die Wahl gegen das aktuelle stdout und die `NO_COLOR`-Konvention auf.
+    /// Resolves the choice against the current stdout and the `NO_COLOR` convention.
     #[must_use]
     pub fn resolve(self) -> bool {
         match self {
@@ -33,32 +33,32 @@ impl ColorChoice {
     }
 }
 
-/// Eine Farbpalette für die Enten-Ausgabe.
+/// A color palette for the duck output.
 #[derive(Debug, Clone, Copy)]
 pub struct Theme {
-    /// Name des Themes (z. B. `"classic"`).
+    /// Name of the theme (e.g. `"classic"`).
     pub name: &'static str,
-    /// Farbe der Ente selbst.
+    /// Color of the duck itself.
     pub duck: Color,
-    /// Akzentfarbe für Hervorhebungen.
+    /// Accent color for highlights.
     pub accent: Color,
-    /// Farbe des Sprechblasen-Rahmens und -Texts.
+    /// Color of the speech bubble's border and text.
     pub bubble: Color,
-    /// Farbe für normalen Fließtext.
+    /// Color for normal body text.
     pub text: Color,
-    /// Gedämpfte Farbe für Nebeninformationen.
+    /// Dimmed color for secondary information.
     pub dim: Color,
-    /// Erfolgs-/Feierfarbe.
+    /// Success/celebration color.
     pub success: Color,
-    /// Farbe der Wasserlinie.
+    /// Color of the waterline.
     pub water: Color,
 }
 
 impl Theme {
-    /// Namen aller eingebauten Themes.
+    /// Names of all built-in themes.
     pub const NAMES: &'static [&'static str] = &["classic", "midnight", "mono"];
 
-    /// Warmes Standard-Theme mit gelber Ente.
+    /// Warm default theme with a yellow duck.
     pub const CLASSIC: Theme = Theme {
         name: "classic",
         duck: Color::Yellow,
@@ -70,7 +70,7 @@ impl Theme {
         water: Color::Blue,
     };
 
-    /// Dunkles Theme mit sanften RGB-Tönen.
+    /// Dark theme with soft RGB tones.
     pub const MIDNIGHT: Theme = Theme {
         name: "midnight",
         duck: Color::Rgb {
@@ -98,7 +98,7 @@ impl Theme {
         },
     };
 
-    /// Monochromes Theme (ein Farbton) für nüchterne Terminals.
+    /// Monochrome theme (single color) for plain terminals.
     pub const MONO: Theme = Theme {
         name: "mono",
         duck: Color::White,
@@ -110,7 +110,7 @@ impl Theme {
         water: Color::Grey,
     };
 
-    /// Theme per Name; ein unbekannter Name liefert [`Theme::CLASSIC`].
+    /// Theme by name; an unknown name returns [`Theme::CLASSIC`].
     #[must_use]
     pub fn by_name(name: &str) -> Theme {
         match name {
@@ -127,8 +127,8 @@ impl Default for Theme {
     }
 }
 
-/// Färbt Strings gemäß einem [`Theme`] – oder gibt sie unverändert zurück, wenn
-/// Farbe deaktiviert ist.
+/// Colors strings according to a [`Theme`] – or returns them unchanged when
+/// color is disabled.
 #[derive(Debug, Clone, Copy)]
 pub struct Styler {
     theme: Theme,
@@ -136,25 +136,25 @@ pub struct Styler {
 }
 
 impl Styler {
-    /// Neuer Styler mit Palette `theme`; `enabled=false` schaltet Farbe ganz aus.
+    /// New styler with palette `theme`; `enabled=false` turns color off entirely.
     #[must_use]
     pub fn new(theme: Theme, enabled: bool) -> Self {
         Self { theme, enabled }
     }
 
-    /// Die zugrunde liegende Palette.
+    /// The underlying palette.
     #[must_use]
     pub fn theme(&self) -> &Theme {
         &self.theme
     }
 
-    /// Ob dieser Styler tatsächlich färbt.
+    /// Whether this styler actually colors.
     #[must_use]
     pub fn enabled(&self) -> bool {
         self.enabled
     }
 
-    /// Kernroutine: färbt `s` mit Farbe `c` (oder gibt `s` unverändert zurück).
+    /// Core routine: colors `s` with color `c` (or returns `s` unchanged).
     #[must_use]
     pub fn paint(&self, s: &str, c: Color) -> String {
         if !self.enabled {
@@ -164,37 +164,37 @@ impl Styler {
         format!("{}{}{}", SetForegroundColor(c), s, ResetColor)
     }
 
-    /// Färbt `s` in der Entenfarbe.
+    /// Colors `s` in the duck color.
     #[must_use]
     pub fn duck(&self, s: &str) -> String {
         self.paint(s, self.theme.duck)
     }
-    /// Färbt `s` in der Akzentfarbe.
+    /// Colors `s` in the accent color.
     #[must_use]
     pub fn accent(&self, s: &str) -> String {
         self.paint(s, self.theme.accent)
     }
-    /// Färbt `s` in der Sprechblasenfarbe.
+    /// Colors `s` in the speech bubble color.
     #[must_use]
     pub fn bubble(&self, s: &str) -> String {
         self.paint(s, self.theme.bubble)
     }
-    /// Färbt `s` in der Textfarbe.
+    /// Colors `s` in the text color.
     #[must_use]
     pub fn text(&self, s: &str) -> String {
         self.paint(s, self.theme.text)
     }
-    /// Färbt `s` gedämpft.
+    /// Colors `s` dimmed.
     #[must_use]
     pub fn dim(&self, s: &str) -> String {
         self.paint(s, self.theme.dim)
     }
-    /// Färbt `s` in der Erfolgsfarbe.
+    /// Colors `s` in the success color.
     #[must_use]
     pub fn success(&self, s: &str) -> String {
         self.paint(s, self.theme.success)
     }
-    /// Färbt `s` in der Wasserfarbe.
+    /// Colors `s` in the water color.
     #[must_use]
     pub fn water(&self, s: &str) -> String {
         self.paint(s, self.theme.water)
@@ -217,7 +217,7 @@ mod tests {
         let s = Styler::new(Theme::CLASSIC, true);
         let painted = s.duck("Quak");
         assert!(painted.contains("Quak"));
-        assert!(painted.len() > "Quak".len(), "sollte ANSI-Codes enthalten");
+        assert!(painted.len() > "Quak".len(), "should contain ANSI codes");
     }
 
     #[test]

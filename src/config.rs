@@ -1,9 +1,10 @@
-//! Persistente Nutzereinstellungen (`<config>/config.yaml`).
+//! Persistent user settings (`<config>/config.yaml`).
 //!
-//! Die Konfiguration ist die *persistente* Schicht. Beim Start liest die
-//! Anwendung sie ein und überschreibt einzelne Felder mit CLI-Flags (siehe
-//! [`crate::run`]). Fehlt die Datei, gelten die Standardwerte.
+//! The configuration is the *persistent* layer. At startup the application reads
+//! it and overrides individual fields with CLI flags (see [`crate::run`]). If the
+//! file is missing, the defaults apply.
 
+use crate::i18n::Lang;
 use crate::paths;
 use crate::ui::theme::ColorChoice;
 use crate::ui::UiSettings;
@@ -12,21 +13,21 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-/// Animationsgeschwindigkeit (auch als CLI-Wert `--speed`).
+/// Animation speed (also the `--speed` CLI value).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, clap::ValueEnum, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum Speed {
-    /// Gemütlich.
+    /// Leisurely.
     Slow,
-    /// Normal (Standard).
+    /// Normal (default).
     #[default]
     Normal,
-    /// Flott.
+    /// Brisk.
     Fast,
 }
 
 impl Speed {
-    /// Geschwindigkeits-Multiplikator für Animationsverzögerungen.
+    /// Speed multiplier for animation delays.
     #[must_use]
     pub fn multiplier(self) -> f32 {
         match self {
@@ -37,16 +38,16 @@ impl Speed {
     }
 }
 
-/// Farbpräferenz (auch als CLI-Wert `--color`).
+/// Colour preference (also the `--color` CLI value).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, clap::ValueEnum, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum ColorPref {
-    /// Automatisch (Terminal + `NO_COLOR` berücksichtigen).
+    /// Automatic (respect the terminal and `NO_COLOR`).
     #[default]
     Auto,
-    /// Immer farbig.
+    /// Always colour.
     Always,
-    /// Nie farbig.
+    /// Never colour.
     Never,
 }
 
@@ -60,22 +61,24 @@ impl From<ColorPref> for ColorChoice {
     }
 }
 
-/// Die gespeicherten Nutzereinstellungen.
+/// The stored user settings.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct Config {
-    /// Farbmodus.
+    /// Colour mode.
     pub color: ColorPref,
-    /// Name des Themes (siehe [`crate::ui::theme::Theme::NAMES`]).
+    /// Theme name (see [`crate::ui::theme::Theme::NAMES`]).
     pub theme: String,
-    /// Ob Animationen grundsätzlich an sind.
+    /// Whether animations are on at all.
     pub animations: bool,
-    /// Animationsgeschwindigkeit.
+    /// Animation speed.
     pub speed: Speed,
-    /// Ob der Tippeffekt an ist.
+    /// Whether the typewriter effect is on.
     pub typewriter: bool,
-    /// Standardthema, wenn keines per `--topic` gewählt wird.
+    /// Default topic when none is chosen via `--topic`.
     pub default_topic: String,
+    /// User-interface language (default: English).
+    pub language: Lang,
 }
 
 impl Default for Config {
@@ -87,25 +90,26 @@ impl Default for Config {
             speed: Speed::Normal,
             typewriter: true,
             default_topic: crate::questions::DEFAULT_TOPIC.to_string(),
+            language: Lang::English,
         }
     }
 }
 
 impl Config {
-    /// Parst eine Konfiguration aus YAML-Text.
+    /// Parses a configuration from YAML text.
     pub fn parse(yaml: &str) -> Result<Self> {
-        serde_yaml::from_str(yaml).context("Ungültige config.yaml")
+        serde_yaml::from_str(yaml).context("Invalid config.yaml")
     }
 
-    /// Serialisiert die Konfiguration als YAML.
+    /// Serializes the configuration as YAML.
     pub fn to_yaml(&self) -> Result<String> {
-        serde_yaml::to_string(self).context("Konnte Konfiguration nicht serialisieren")
+        serde_yaml::to_string(self).context("Could not serialize configuration")
     }
 
-    /// Lädt die Konfiguration aus der Standarddatei oder liefert die Defaults.
+    /// Loads the configuration from the default file, or returns the defaults.
     ///
-    /// Ein Parse-Fehler wird als Hinweis gemeldet, danach gelten die Defaults –
-    /// eine kaputte Datei legt rubberduck also nicht lahm.
+    /// A parse error is reported as a notice, then the defaults apply – a broken
+    /// file therefore never takes rubberduck down.
     #[must_use]
     pub fn load_or_default() -> Self {
         let Ok(path) = paths::config_file() else {
@@ -114,31 +118,31 @@ impl Config {
         Self::load_or_default_at(&path)
     }
 
-    /// Wie [`Config::load_or_default`], aber mit explizitem Pfad (für Tests).
+    /// Like [`Config::load_or_default`], but with an explicit path (for tests).
     #[must_use]
     pub fn load_or_default_at(path: &Path) -> Self {
         match fs::read_to_string(path) {
             Ok(content) => Self::parse(&content).unwrap_or_else(|err| {
-                eprintln!("🦆 Hinweis: {err}; nutze Standardeinstellungen.");
+                eprintln!("🦆 Note: {err}; using default settings.");
                 Self::default()
             }),
             Err(_) => Self::default(),
         }
     }
 
-    /// Schreibt die Konfiguration in die Standarddatei und gibt deren Pfad zurück.
+    /// Writes the configuration to the default file and returns its path.
     pub fn save(&self) -> Result<PathBuf> {
         let path = paths::config_file()?;
         if let Some(dir) = path.parent() {
             fs::create_dir_all(dir)
-                .with_context(|| format!("Konnte {} nicht anlegen", dir.display()))?;
+                .with_context(|| format!("Could not create {}", dir.display()))?;
         }
         fs::write(&path, self.to_yaml()?)
-            .with_context(|| format!("Konnte {} nicht schreiben", path.display()))?;
+            .with_context(|| format!("Could not write {}", path.display()))?;
         Ok(path)
     }
 
-    /// Basis-[`UiSettings`] aus dieser Konfiguration (vor CLI-Overrides).
+    /// Base [`UiSettings`] from this configuration (before CLI overrides).
     #[must_use]
     pub fn base_ui_settings(&self) -> UiSettings {
         UiSettings {
@@ -148,6 +152,7 @@ impl Config {
             speed: self.speed.multiplier(),
             typewriter: self.typewriter,
             quiet: false,
+            lang: self.language,
         }
     }
 }
@@ -163,6 +168,7 @@ mod tests {
         let back = Config::parse(&yaml).unwrap();
         assert_eq!(back.theme, "classic");
         assert_eq!(back.speed, Speed::Normal);
+        assert_eq!(back.language, Lang::English);
         assert!(back.animations && back.typewriter);
     }
 
@@ -171,9 +177,16 @@ mod tests {
         let cfg = Config::parse("theme: midnight\nanimations: false\n").unwrap();
         assert_eq!(cfg.theme, "midnight");
         assert!(!cfg.animations);
-        // Nicht gesetzte Felder kommen aus Default.
+        // Unset fields come from Default.
         assert_eq!(cfg.speed, Speed::Normal);
         assert_eq!(cfg.color, ColorPref::Auto);
+        assert_eq!(cfg.language, Lang::English);
+    }
+
+    #[test]
+    fn language_can_be_set() {
+        let cfg = Config::parse("language: de\n").unwrap();
+        assert_eq!(cfg.language, Lang::German);
     }
 
     #[test]

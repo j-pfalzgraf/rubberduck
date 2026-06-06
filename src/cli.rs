@@ -1,59 +1,61 @@
-//! CLI-Definition mit `clap` (derive): Flags, Themen-Liste und Shell-Completions.
+//! CLI definition with `clap` (derive): flags, topic listing and shell completions.
 
 use crate::config::{ColorPref, Speed};
+use crate::i18n::Lang;
 use clap::{Parser, Subcommand};
 use clap_complete::Shell;
 
-/// Top-Level-Argumente.
+/// Top-level arguments.
 ///
-/// Ohne Unterbefehl startet eine Debugging-Session; die Flags steuern Thema,
-/// Protokoll, Ente und Animationen.
+/// Without a subcommand a debugging session starts; the flags control the topic,
+/// the log, the duck and the animations.
 #[derive(Parser, Debug)]
 #[command(
     name = "rubberduck",
     version,
-    about = "Ein offline Rubber-Duck-Debugging-Begleiter fürs Terminal.",
-    long_about = "rubberduck stellt dir strukturierte Debugging-Fragen, bis du den \
-                  Bug selbst findest – komplett offline, mit animierter ASCII-Ente.",
-    after_help = "Beispiele:\n  \
-        rubberduck                     Session starten (Themen-Auswahl, falls kein --topic)\n  \
-        rubberduck --topic logic       direkt mit dem Logik-Fragenset\n  \
-        rubberduck --log               Session als Markdown speichern\n  \
-        rubberduck --no-anim --quiet   ohne Animation/Ente (z. B. für Logs)\n  \
-        rubberduck --theme midnight    anderes Farbschema\n  \
-        rubberduck topics              verfügbare Themen anzeigen\n  \
-        rubberduck completions zsh     Shell-Completions ausgeben\n  \
-        rubberduck self update         auf neueste Version aktualisieren\n\n\
-        Tipp: Tippe während der Session !aha, sobald du den Bug gefunden hast."
+    about = "An offline rubber-duck-debugging companion for your terminal.",
+    long_about = "rubberduck asks you structured debugging questions until you find the \
+                  bug yourself — fully offline, with an animated ASCII duck.",
+    after_help = "Examples:\n  \
+        rubberduck                     start a session (topic picker if no --topic)\n  \
+        rubberduck --topic logic       jump straight into the logic question set\n  \
+        rubberduck --log               save the session as Markdown\n  \
+        rubberduck --no-anim --quiet   no animation/duck (e.g. for logs)\n  \
+        rubberduck --theme midnight    a different colour scheme\n  \
+        rubberduck --lang de           switch the language to German\n  \
+        rubberduck topics              show the available topics\n  \
+        rubberduck completions zsh     print shell completions\n  \
+        rubberduck self update         update to the latest version\n\n\
+        Tip: type !aha during a session as soon as you have found the bug."
 )]
 pub struct Cli {
-    /// Themen-Fragenset; verfügbare Namen via `rubberduck topics`.
+    /// Topic question set; see `rubberduck topics` for the available names.
     #[arg(long, value_name = "TOPIC")]
     pub topic: Option<String>,
 
-    /// Sitzung als Markdown-Logbuch unter ~/.rubberduck speichern.
+    /// Save the session as a Markdown log under ~/.rubberduck.
     #[arg(long)]
     pub log: bool,
 
-    // Darstellungs-Flags sind `global`, damit sie auch nach Unterbefehlen
-    // funktionieren (z. B. `rubberduck topics --color never`).
-    /// Ohne ASCII-Ente ausgeben, nur knapper Text.
+    // Presentation flags are `global` so they also work after a subcommand
+    // (e.g. `rubberduck topics --color never`).
+    /// Print without the ASCII duck, just concise text.
     #[arg(long, global = true)]
     pub quiet: bool,
 
-    /// Animationen abschalten (statische Ente statt Tippeffekt & Co.).
+    /// Disable animations (a static duck instead of the typewriter & co.).
     #[arg(long = "no-anim", global = true)]
     pub no_anim: bool,
 
-    /// Animationsgeschwindigkeit (slow, normal, fast).
+    /// Animation speed (slow, normal, fast).
     #[arg(long, value_enum, global = true)]
     pub speed: Option<Speed>,
 
-    /// Farbmodus (auto, always, never).
+    /// Colour mode (auto, always, never).
     #[arg(long, value_enum, global = true)]
     pub color: Option<ColorPref>,
 
-    /// Farbschema (classic, midnight, mono).
+    /// Colour scheme (classic, midnight, mono).
     #[arg(
         long,
         global = true,
@@ -61,61 +63,65 @@ pub struct Cli {
     )]
     pub theme: Option<String>,
 
-    /// Unterbefehl (statt einer Session).
+    /// User-interface language (en, de).
+    #[arg(long, value_enum, global = true)]
+    pub lang: Option<Lang>,
+
+    /// Subcommand (instead of a session).
     #[command(subcommand)]
     pub command: Option<Command>,
 }
 
-/// Unterbefehle der obersten Ebene.
+/// Top-level subcommands.
 #[derive(Subcommand, Debug)]
 pub enum Command {
-    /// Verfügbare Themen mit Beschreibung auflisten.
+    /// List the available topics with their descriptions.
     Topics,
 
-    /// Shell-Completions ausgeben (bash, zsh, fish, powershell, elvish).
+    /// Print shell completions (bash, zsh, fish, powershell, elvish).
     Completions {
-        /// Ziel-Shell.
+        /// Target shell.
         #[arg(value_enum)]
         shell: Shell,
     },
 
-    /// Persistente Einstellungen verwalten (config.yaml).
+    /// Manage persistent settings (config.yaml).
     Config {
-        /// Auszuführende Konfigurations-Aktion.
+        /// Configuration action to run.
         #[command(subcommand)]
         action: ConfigAction,
     },
 
-    /// Selbstverwaltung: Update und Deinstallation.
+    /// Self management: update and uninstall.
     #[command(name = "self")]
     SelfCmd {
-        /// Auszuführende Selbstverwaltungs-Aktion.
+        /// Self-management action to run.
         #[command(subcommand)]
         action: SelfAction,
     },
 }
 
-/// Aktionen unterhalb von `rubberduck config`.
+/// Actions under `rubberduck config`.
 #[derive(Subcommand, Debug)]
 pub enum ConfigAction {
-    /// Eine Standard-`config.yaml` anlegen (legt nichts an, wenn sie existiert).
+    /// Create a default `config.yaml` (does nothing if it already exists).
     Init,
-    /// Effektive Einstellungen und den Dateipfad anzeigen.
+    /// Show the effective settings and the file path.
     Show,
-    /// Nur den Pfad der `config.yaml` ausgeben.
+    /// Print only the path of `config.yaml`.
     Path,
 }
 
-/// Aktionen unterhalb von `rubberduck self`.
+/// Actions under `rubberduck self`.
 #[derive(Subcommand, Debug)]
 pub enum SelfAction {
-    /// Auf die neueste Version aktualisieren.
+    /// Update to the latest version.
     Update {
-        /// Nur prüfen, ob ein Update verfügbar ist (nichts installieren).
+        /// Only check whether an update is available (install nothing).
         #[arg(long)]
         check: bool,
     },
-    /// rubberduck samt Konfiguration und Logs entfernen.
+    /// Remove rubberduck along with its configuration and logs.
     Uninstall,
 }
 
@@ -144,12 +150,15 @@ mod tests {
             "never",
             "--theme",
             "midnight",
+            "--lang",
+            "de",
         ]);
         assert_eq!(cli.topic.as_deref(), Some("logic"));
         assert!(cli.log && cli.quiet && cli.no_anim);
         assert_eq!(cli.speed, Some(Speed::Fast));
         assert_eq!(cli.color, Some(ColorPref::Never));
         assert_eq!(cli.theme.as_deref(), Some("midnight"));
+        assert_eq!(cli.lang, Some(Lang::German));
         assert!(cli.command.is_none());
     }
 
@@ -186,9 +195,11 @@ mod tests {
 
     #[test]
     fn global_flags_work_after_subcommand() {
-        let cli = Cli::try_parse_from(["rubberduck", "topics", "--color", "never"]).unwrap();
+        let cli = Cli::try_parse_from(["rubberduck", "topics", "--color", "never", "--lang", "de"])
+            .unwrap();
         assert!(matches!(cli.command, Some(Command::Topics)));
         assert_eq!(cli.color, Some(ColorPref::Never));
+        assert_eq!(cli.lang, Some(Lang::German));
     }
 
     #[test]

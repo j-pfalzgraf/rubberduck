@@ -1,35 +1,35 @@
-//! Die ASCII-Ente: Stimmungen, Posen und ihre Animationen.
+//! The ASCII duck: moods, poses and their animations.
 //!
-//! [`duck_art`] ist der DRY-Kern – eine einzige Pose-Vorlage mit austauschbarem
-//! Auge. Alles andere (Stimmungen, Blinzeln, Schwimmen, Quaken, Feiern) baut
-//! darauf auf.
+//! [`duck_art`] is the DRY core – a single pose template with an interchangeable
+//! eye. Everything else (moods, blinking, swimming, quacking, celebrating) builds
+//! on top of it.
 
 use crate::ui::animate::{Animation, Clip, Easing, Frame};
 use crate::ui::theme::Styler;
 use std::time::Duration;
 
-/// Stimmung bzw. Pose der Ente.
+/// Mood or pose of the duck.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mood {
-    /// Neutral, ruhig.
+    /// Neutral, calm.
     Idle,
-    /// Nachdenklich (Gedankenpunkte).
+    /// Thoughtful (thought dots).
     Thinking,
-    /// Aufmerksam zuhörend.
+    /// Attentively listening.
     Listening,
-    /// Fröhlich.
+    /// Cheerful.
     Happy,
-    /// Neugierig (Fragezeichen).
+    /// Curious (question mark).
     Curious,
-    /// Überrascht (große Augen).
+    /// Surprised (wide eyes).
     Surprised,
-    /// Feiernd.
+    /// Celebrating.
     Celebrating,
-    /// Schläft.
+    /// Sleeping.
     Sleeping,
 }
 
-/// Das offene Auge je Stimmung.
+/// The open eye for each mood.
 #[must_use]
 pub fn eye_for(mood: Mood) -> char {
     match mood {
@@ -40,7 +40,7 @@ pub fn eye_for(mood: Mood) -> char {
     }
 }
 
-/// Das „geblinzelte“ Auge je Stimmung.
+/// The "blinked" eye for each mood.
 #[must_use]
 pub fn blink_eye(mood: Mood) -> char {
     match mood {
@@ -49,7 +49,7 @@ pub fn blink_eye(mood: Mood) -> char {
     }
 }
 
-/// Die 3-zeilige Enten-Pose mit gegebenem Auge (DRY-Kern aller Posen).
+/// The 3-line duck pose with the given eye (DRY core of all poses).
 ///
 /// ```
 /// use rubberduck_cli::ui::duck::duck_art;
@@ -66,7 +66,7 @@ pub fn duck_art(eye: char) -> Vec<String> {
     ]
 }
 
-/// Versieht eine Pose mit stimmungsabhängigen Verzierungen.
+/// Adds mood-dependent decorations to a pose.
 #[must_use]
 pub fn decorate(mut art: Vec<String>, mood: Mood) -> Vec<String> {
     match mood {
@@ -83,29 +83,29 @@ pub fn decorate(mut art: Vec<String>, mood: Mood) -> Vec<String> {
     art
 }
 
-/// Enten-Pose inklusive Verzierungen für die Stimmung (offenes Auge).
+/// Duck pose including decorations for the mood (open eye).
 #[must_use]
 pub fn duck_for(mood: Mood) -> Vec<String> {
     decorate(duck_art(eye_for(mood)), mood)
 }
 
-/// Wie [`duck_for`], aber mit frei wählbarem Auge (z. B. zum Blinzeln).
+/// Like [`duck_for`], but with a freely chosen eye (e.g. for blinking).
 #[must_use]
 pub fn posed(mood: Mood, eye: char) -> Vec<String> {
     decorate(duck_art(eye), mood)
 }
 
-/// Färbt mehrere Zeilen in der Entenfarbe (DRY-Helfer).
+/// Colours multiple lines in the duck colour (DRY helper).
 fn duck_lines(lines: &[String], styler: Styler) -> Vec<String> {
     lines.iter().map(|l| styler.duck(l)).collect()
 }
 
-/// Färbt eine Pose vollständig in der Entenfarbe und macht daraus ein [`Frame`].
+/// Colours a pose entirely in the duck colour and turns it into a [`Frame`].
 fn duck_frame(lines: Vec<String>, styler: Styler) -> Frame {
     Frame::new(duck_lines(&lines, styler))
 }
 
-/// Ruhe-Animation: die Ente blinzelt gelegentlich.
+/// Idle animation: the duck blinks occasionally.
 #[must_use]
 pub fn idle_clip(mood: Mood, styler: Styler) -> Clip {
     let open = duck_frame(duck_art(eye_for(mood)), styler);
@@ -116,12 +116,12 @@ pub fn idle_clip(mood: Mood, styler: Styler) -> Clip {
     )
 }
 
-/// Quak-Animation: ein „Quak!“ blitzt neben der Ente auf.
+/// Quack animation: a localized "quack" word flashes next to the duck.
 #[must_use]
-pub fn quack_clip(mood: Mood, styler: Styler) -> Clip {
+pub fn quack_clip(mood: Mood, styler: Styler, word: &str) -> Clip {
     let quiet = duck_frame(duck_art(eye_for(mood)), styler);
     let mut loud_lines = duck_lines(&duck_art(eye_for(mood)), styler);
-    loud_lines.push(styler.accent("   Quak! 🦆"));
+    loud_lines.push(styler.accent(&format!("   {word} 🦆")));
     let loud = Frame::new(loud_lines);
     Clip::new(
         vec![quiet.clone(), loud.clone(), quiet, loud],
@@ -129,11 +129,11 @@ pub fn quack_clip(mood: Mood, styler: Styler) -> Clip {
     )
 }
 
-/// Feier-Animation für den Aha-Moment: Funken, Banner und jubelnde Ente.
+/// Celebration animation for the aha moment: sparkles, a banner and a cheering duck.
 #[must_use]
-pub fn celebrate_clip(styler: Styler) -> Clip {
+pub fn celebrate_clip(styler: Styler, banner: &str) -> Clip {
     let make = |sparkle: &str| {
-        let mut lines = vec![styler.success(&format!("   {sparkle}  HEUREKA!  {sparkle}"))];
+        let mut lines = vec![styler.success(&format!("   {sparkle}  {banner}  {sparkle}"))];
         lines.extend(duck_lines(&duck_for(Mood::Celebrating), styler));
         lines.push(styler.accent(r"   \o/  \o/  \o/"));
         Frame::new(lines)
@@ -151,7 +151,7 @@ pub fn celebrate_clip(styler: Styler) -> Clip {
     )
 }
 
-/// Die Ente schwimmt von rechts ins Bild – mit wogender Wasserlinie.
+/// The duck swims into frame from the right – with an undulating water line.
 struct SwimIn {
     mood: Mood,
     styler: Styler,
@@ -190,7 +190,7 @@ impl Animation for SwimIn {
     }
 }
 
-/// Baut die Schwimm-Animation (Ente `mood`, Terminalbreite `width`).
+/// Builds the swim animation (duck `mood`, terminal width `width`).
 #[must_use]
 pub fn swim_in(mood: Mood, styler: Styler, width: usize) -> impl Animation {
     SwimIn {
@@ -237,7 +237,7 @@ mod tests {
         let anim = swim_in(Mood::Idle, styler(), 40);
         let first = anim.frame(0);
         let last = anim.frame(anim.frame_count() - 1);
-        // Erstes Bild eingerückt, letztes bündig (kein führendes Leerzeichen im Entenkopf).
+        // First frame indented, last flush (no leading space in the duck head).
         assert!(first.lines[0].starts_with(' '));
         assert!(last.lines[1].starts_with("<("));
     }

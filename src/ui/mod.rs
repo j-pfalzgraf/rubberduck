@@ -1,8 +1,8 @@
-//! Terminal-Oberfläche von rubberduck: Theme, Animationen und die Ente.
+//! Terminal interface of rubberduck: theme, animations and the duck.
 //!
-//! Die [`Ui`] ist die Fassade, mit der die übrige Anwendung spricht. Sie kapselt
-//! Farb- und TTY-Auflösung, das Abspielen von Animationen und das saubere
-//! Degradieren zu statischer bzw. reiner Textausgabe (`--quiet`, kein Terminal).
+//! The [`Ui`] is the facade that the rest of the application talks to. It encapsulates
+//! colour and TTY resolution, playing back animations and gracefully
+//! degrading to static or plain-text output (`--quiet`, no terminal).
 
 pub mod animate;
 pub mod duck;
@@ -12,6 +12,7 @@ pub mod surface;
 pub mod text;
 pub mod theme;
 
+use crate::i18n::{Lang, Tr};
 use crate::ui::animate::Player;
 use crate::ui::scene::SpeechScene;
 use crate::ui::spinner::Thinking;
@@ -21,15 +22,15 @@ use std::io::{self, IsTerminal};
 
 pub use duck::Mood;
 
-/// ANSI-Sequenz, die den Cursor wieder sichtbar macht (`CSI ?25h`).
+/// ANSI sequence that makes the cursor visible again (`CSI ?25h`).
 const SHOW_CURSOR: &[u8] = b"\x1b[?25h";
 
-/// Installiert Schutzmechanismen, die den Cursor wiederherstellen, falls das
-/// Programm mitten in einer Animation durch **Strg-C** oder einen **Panic**
-/// beendet wird (beides überspringt `Drop`, daher reichen RAII-Guards nicht).
+/// Installs safeguards that restore the cursor if the
+/// program is terminated mid-animation by **Ctrl-C** or a **panic**
+/// (both skip `Drop`, so RAII guards are not enough).
 ///
-/// Einmal beim Start aufrufen. No-op, wenn die jeweilige Ausgabe kein Terminal
-/// ist (dann blendet ohnehin niemand den Cursor aus).
+/// Call once at startup. No-op when the respective output is not a terminal
+/// (in that case nobody hides the cursor anyway).
 pub fn install_terminal_guards() {
     use std::io::Write;
 
@@ -53,21 +54,23 @@ pub fn install_terminal_guards() {
     }
 }
 
-/// Einstellungen, mit denen eine [`Ui`] erzeugt wird (von der Konfiguration abgeleitet).
+/// Settings used to create a [`Ui`] (derived from the configuration).
 #[derive(Debug, Clone)]
 pub struct UiSettings {
-    /// Farbmodus.
+    /// Colour mode.
     pub color: ColorChoice,
-    /// Name des Themes (siehe [`Theme::NAMES`]).
+    /// Name of the theme (see [`Theme::NAMES`]).
     pub theme: String,
-    /// Ob Animationen grundsätzlich erlaubt sind.
+    /// Whether animations are allowed in general.
     pub animations: bool,
-    /// Geschwindigkeits-Multiplikator (1.0 = normal).
+    /// Speed multiplier (1.0 = normal).
     pub speed: f32,
-    /// Ob der Tippeffekt aktiv ist.
+    /// Whether the typewriter effect is active.
     pub typewriter: bool,
-    /// `quiet`: keine Ente/Animation, nur knapper Text.
+    /// `quiet`: no duck/animation, only terse text.
     pub quiet: bool,
+    /// User-interface language.
+    pub lang: Lang,
 }
 
 impl Default for UiSettings {
@@ -79,72 +82,82 @@ impl Default for UiSettings {
             speed: 1.0,
             typewriter: true,
             quiet: false,
+            lang: Lang::English,
         }
     }
 }
 
-/// Die Hochsprach-Oberfläche von rubberduck.
+/// The high-level interface of rubberduck.
 pub struct Ui {
     styler: Styler,
     settings: UiSettings,
     stdout_tty: bool,
     stdin_tty: bool,
+    tr: Tr,
 }
 
 impl Ui {
-    /// Erzeugt die Ui und löst Farb- und TTY-Fragen einmalig auf.
+    /// Creates the Ui and resolves colour and TTY questions once.
     #[must_use]
     pub fn new(settings: UiSettings) -> Self {
         let stdout_tty = io::stdout().is_terminal();
         let stdin_tty = io::stdin().is_terminal();
         let styler = Styler::new(Theme::by_name(&settings.theme), settings.color.resolve());
+        let tr = Tr::new(settings.lang);
         Self {
             styler,
             settings,
             stdout_tty,
             stdin_tty,
+            tr,
         }
     }
 
-    /// Der aktive Styler (z. B. für Begleittexte der Anwendung).
+    /// The active styler (e.g. for accompanying texts of the application).
     #[must_use]
     pub fn styler(&self) -> &Styler {
         &self.styler
     }
 
-    /// Ob die Ausgabe an ein echtes Terminal geht.
+    /// The active translator (bound to the configured language).
+    #[must_use]
+    pub fn tr(&self) -> Tr {
+        self.tr
+    }
+
+    /// Whether the output goes to a real terminal.
     #[must_use]
     pub fn is_tty(&self) -> bool {
         self.stdout_tty
     }
 
-    /// Ob ein interaktiver Dialog möglich ist – stdin **und** stdout sind
-    /// Terminals. Nur dann dürfen Auswahl- und Ja/Nein-Prompts laufen.
+    /// Whether an interactive dialog is possible – stdin **and** stdout are
+    /// terminals. Only then may selection and yes/no prompts run.
     #[must_use]
     pub fn is_interactive(&self) -> bool {
         self.stdin_tty && self.stdout_tty
     }
 
-    /// Ob im `quiet`-Modus (keine Ente).
+    /// Whether in `quiet` mode (no duck).
     #[must_use]
     pub fn is_quiet(&self) -> bool {
         self.settings.quiet
     }
 
-    /// Ob Animationen tatsächlich laufen (stdout-Terminal + aktiviert + nicht `quiet`).
+    /// Whether animations actually run (stdout terminal + enabled + not `quiet`).
     #[must_use]
     pub fn animating(&self) -> bool {
         self.stdout_tty && self.settings.animations && !self.settings.quiet
     }
 
-    /// Innere Sprechblasenbreite passend zur Terminalbreite.
+    /// Inner speech-bubble width matching the terminal width.
     fn bubble_width(&self, surface: &impl Surface) -> usize {
         (surface.width() as usize).saturating_sub(8).clamp(16, 64)
     }
 
-    /// Die Ente spricht `text` aus (Tippeffekt + Ente) mit Stimmung `mood`.
+    /// The duck speaks `text` (typewriter effect + duck) with mood `mood`.
     ///
-    /// Im `quiet`-Modus wird stattdessen nur eine knappe Textzeile gedruckt.
+    /// In `quiet` mode only a terse line of text is printed instead.
     pub fn duck_says(&mut self, text: &str, mood: Mood) -> io::Result<()> {
         if self.settings.quiet {
             println!("\n{} {}", self.styler.accent("?"), self.styler.text(text));
@@ -156,7 +169,7 @@ impl Ui {
         Player::new(&mut surface, self.animating(), self.settings.speed).play(&scene)
     }
 
-    /// Lässt die Ente ins Bild schwimmen (nur wenn animiert; sonst No-op).
+    /// Lets the duck swim into the frame (only when animated; otherwise a no-op).
     pub fn swim_in(&mut self, mood: Mood) -> io::Result<()> {
         if !self.animating() {
             return Ok(());
@@ -167,28 +180,28 @@ impl Ui {
         Player::new(&mut surface, true, self.settings.speed).play(&anim)
     }
 
-    /// Spielt eine kurze Quak-Animation.
+    /// Plays a short quack animation.
     pub fn quack(&mut self, mood: Mood) -> io::Result<()> {
         if self.settings.quiet {
             return Ok(());
         }
         let mut surface = TermSurface::stdout();
-        let clip = duck::quack_clip(mood, self.styler);
+        let clip = duck::quack_clip(mood, self.styler, self.tr.quack_word());
         Player::new(&mut surface, self.animating(), self.settings.speed).play(&clip)
     }
 
-    /// Spielt die Feier-Animation für den Aha-Moment.
+    /// Plays the celebration animation for the aha moment.
     pub fn celebrate(&mut self) -> io::Result<()> {
         if self.settings.quiet {
-            println!("\n{}", self.styler.success("✨ Stark – gefunden!"));
+            println!("\n{}", self.styler.success(self.tr.celebrate_quiet()));
             return Ok(());
         }
         let mut surface = TermSurface::stdout();
-        let clip = duck::celebrate_clip(self.styler);
+        let clip = duck::celebrate_clip(self.styler, self.tr.eureka());
         Player::new(&mut surface, self.animating(), self.settings.speed).play(&clip)
     }
 
-    /// Zeigt für `cycles` Bilder einen Denk-Spinner.
+    /// Shows a thinking spinner for `cycles` frames.
     pub fn thinking(&mut self, label: &str, cycles: usize) -> io::Result<()> {
         if !self.animating() {
             return Ok(());

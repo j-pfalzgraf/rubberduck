@@ -1,10 +1,11 @@
-//! Selbstverwaltung: `self update` und `self uninstall`.
+//! Self management: `self update` and `self uninstall`.
 //!
-//! `self update` lädt das passende Release-Archiv über GitHub (HTTPS/TLS) und
-//! ersetzt das laufende Binary. Eine zusätzliche SHA256-Prüfung übernehmen die
-//! Install-Skripte (`install.sh`/`install.ps1`); eine Signatur-Verifikation für
-//! `self update` ist als Härtung vorgesehen (siehe README → „Geplant").
+//! `self update` downloads the matching release archive over GitHub (HTTPS/TLS)
+//! and replaces the running binary. An additional SHA256 check is done by the
+//! install scripts (`install.sh`/`install.ps1`); signature verification for
+//! `self update` is a planned hardening (see the README → "Planned").
 
+use crate::i18n::Tr;
 use crate::paths;
 use anyhow::{bail, Context, Result};
 use dialoguer::Confirm;
@@ -12,16 +13,16 @@ use std::fs;
 use std::io::IsTerminal;
 use std::path::Path;
 
-/// GitHub-Repository, aus dem Releases bezogen werden. **Vor dem ersten Release
-/// auf den echten Owner/Repo-Namen anpassen.**
+/// GitHub repository releases are fetched from. **Set this to the real
+/// owner/repo before the first release.**
 pub const REPO_OWNER: &str = "j-pfalzgraf";
-/// Repository-Name innerhalb von [`REPO_OWNER`].
+/// Repository name within [`REPO_OWNER`].
 pub const REPO_NAME: &str = "rubberduck";
-/// Name des Binärassets innerhalb der Release-Archive.
+/// Name of the binary asset inside the release archives.
 pub const BIN_NAME: &str = "rubberduck";
 
-/// Aktualisiert das Binary – oder prüft mit `check_only` nur auf Updates.
-pub fn update(check_only: bool) -> Result<()> {
+/// Updates the binary – or, with `check_only`, only checks for updates.
+pub fn update(check_only: bool, tr: Tr) -> Result<()> {
     let current = env!("CARGO_PKG_VERSION");
 
     if check_only {
@@ -29,21 +30,21 @@ pub fn update(check_only: bool) -> Result<()> {
             .repo_owner(REPO_OWNER)
             .repo_name(REPO_NAME)
             .build()
-            .context("Konnte die Release-Abfrage nicht konfigurieren")?
+            .context("Could not configure the release query")?
             .fetch()
-            .context("Konnte Releases nicht abrufen")?;
+            .context("Could not fetch releases")?;
 
         match releases.first() {
             Some(latest) => {
                 let newer = self_update::version::bump_is_greater(current, &latest.version)
                     .unwrap_or(false);
                 if newer {
-                    println!("🦆 Update verfügbar: {current} → {}", latest.version);
+                    println!("{}", tr.update_available(current, &latest.version));
                 } else {
-                    println!("🦆 rubberduck ist aktuell (Version {current}).");
+                    println!("{}", tr.up_to_date(current));
                 }
             }
-            None => println!("Keine Releases gefunden."),
+            None => println!("{}", tr.no_releases()),
         }
         return Ok(());
     }
@@ -55,87 +56,76 @@ pub fn update(check_only: bool) -> Result<()> {
         .show_download_progress(true)
         .current_version(current)
         .build()
-        .context("Update-Konfiguration fehlgeschlagen")?
+        .context("Update configuration failed")?
         .update()
-        .context("Update fehlgeschlagen")?;
+        .context("Update failed")?;
 
     if status.updated() {
-        println!("🦆 Aktualisiert auf Version {}.", status.version());
+        println!("{}", tr.updated_to(status.version()));
     } else {
-        println!("🦆 Bereits aktuell (Version {}).", status.version());
+        println!("{}", tr.already_current(status.version()));
     }
     Ok(())
 }
 
-/// Entfernt nach Rückfrage Konfiguration, Logs und das Binary selbst.
-pub fn uninstall() -> Result<()> {
+/// Removes configuration, logs and the binary itself after confirmation.
+pub fn uninstall(tr: Tr) -> Result<()> {
     let config = paths::config_dir()?;
     let data = paths::data_dir()?;
-    let exe = std::env::current_exe().context("Konnte den eigenen Pfad nicht bestimmen")?;
+    let exe = std::env::current_exe().context("Could not determine own path")?;
 
-    // Sicherheitsnetz: niemals Home- oder Wurzelverzeichnis löschen. Schützt vor
-    // versehentlich gesetztem RUBBERDUCK_CONFIG_DIR/RUBBERDUCK_DATA_DIR.
+    // Safety net: never delete the home or root directory. Guards against an
+    // accidentally set RUBBERDUCK_CONFIG_DIR/RUBBERDUCK_DATA_DIR.
     for dir in [&config, &data] {
         if is_unsafe_target(dir) {
-            bail!(
-                "Abbruch: '{}' sieht nach einem Home-/System-Verzeichnis aus und wird \
-                 nicht gelöscht. Bitte RUBBERDUCK_CONFIG_DIR/RUBBERDUCK_DATA_DIR prüfen.",
-                dir.display()
-            );
+            bail!("{}", tr.uninstall_unsafe(&dir.display().to_string()));
         }
     }
 
-    println!("Folgendes wird entfernt:");
-    println!("  • Binary:        {}", exe.display());
-    println!("  • Konfiguration: {}", config.display());
-    println!("  • Logs:          {}", data.display());
+    println!("{}", tr.uninstall_header());
+    println!("  • {}: {}", tr.uninstall_label_binary(), exe.display());
+    println!("  • {}: {}", tr.uninstall_label_config(), config.display());
+    println!("  • {}: {}", tr.uninstall_label_logs(), data.display());
 
-    // Bestätigung braucht ein Terminal (analog zum TTY-Guard in uninstall.sh).
+    // Confirmation needs a terminal (mirrors the TTY guard in uninstall.sh).
     if !std::io::stdin().is_terminal() || !std::io::stderr().is_terminal() {
-        bail!(
-            "Deinstallation braucht eine interaktive Bestätigung und ist ohne Terminal \
-             nicht möglich. Nutze stattdessen 'uninstall.sh --yes'."
-        );
+        bail!("{}", tr.uninstall_needs_tty());
     }
 
     let confirmed = Confirm::new()
-        .with_prompt("Wirklich alles entfernen?")
+        .with_prompt(tr.uninstall_confirm())
         .default(false)
         .interact()
-        .context("Abfrage fehlgeschlagen")?;
+        .context("Confirmation failed")?;
 
     if !confirmed {
-        println!("Abgebrochen – nichts wurde entfernt.");
+        println!("{}", tr.uninstall_cancelled());
         return Ok(());
     }
 
     for dir in [&config, &data] {
         if dir.exists() {
             fs::remove_dir_all(dir)
-                .with_context(|| format!("Konnte {} nicht entfernen", dir.display()))?;
-            println!("Entfernt: {}", dir.display());
+                .with_context(|| format!("Could not remove {}", dir.display()))?;
+            println!("{}", tr.uninstall_removed(&dir.display().to_string()));
         }
     }
 
-    // Das laufende Binary plattformübergreifend löschen – ganz zuletzt.
+    // Delete the running binary cross-platform – last of all.
     if let Err(e) = self_replace::self_delete() {
-        eprintln!(
-            "Konfiguration und Logs wurden entfernt, aber das Binary unter {} konnte \
-             nicht gelöscht werden. Bitte manuell entfernen.",
-            exe.display()
-        );
-        return Err(e).context("Konnte das Binary nicht entfernen");
+        eprintln!("{}", tr.uninstall_binary_failed(&exe.display().to_string()));
+        return Err(e).context("Could not delete the binary");
     }
-    println!("rubberduck wurde entfernt. Danke fürs Quaken! 🦆");
+    println!("{}", tr.uninstall_done());
     Ok(())
 }
 
-/// Prüft, ob `dir` ein gefährliches Löschziel ist: Wurzelverzeichnis, das
-/// Home-Verzeichnis selbst oder ein Vorfahre davon.
+/// Whether `dir` is a dangerous deletion target: the root directory, the home
+/// directory itself, or an ancestor of it.
 fn is_unsafe_target(dir: &Path) -> bool {
     let resolved = dir.canonicalize().unwrap_or_else(|_| dir.to_path_buf());
 
-    // Ein Wurzelverzeichnis ("/" bzw. Laufwerks-Root) hat keinen Parent.
+    // A root directory ("/" or a drive root) has no parent.
     if resolved.parent().is_none() {
         return true;
     }
@@ -145,7 +135,7 @@ fn is_unsafe_target(dir: &Path) -> bool {
             .home_dir()
             .canonicalize()
             .unwrap_or_else(|_| base.home_dir().to_path_buf());
-        // Exakt das Home-Verzeichnis oder ein Vorfahre davon -> gefährlich.
+        // Exactly the home directory, or an ancestor of it -> dangerous.
         if resolved == home || home.starts_with(&resolved) {
             return true;
         }
