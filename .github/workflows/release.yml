@@ -83,7 +83,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Rust-Toolchain via rustup; das gewünschte Target wird hinzugefügt.
       - name: Install Rust toolchain and target
@@ -147,7 +147,7 @@ jobs:
       # Archiv als Artifact hochladen, damit der Release-Job es einsammeln kann.
       # Ein Artifact pro Target (Name = Asset-Dateiname).
       - name: Upload archive artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: rubberduck-${{ matrix.target }}
           path: ${{ env.ASSET }}
@@ -171,11 +171,11 @@ jobs:
       attestations: write # write the provenance attestation
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       # Collect all build artifacts into ./dist (flat, no per-artifact subdirs).
       - name: Download all archives
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: dist
           merge-multiple: true
@@ -208,7 +208,7 @@ jobs:
 
       # Supply-chain provenance (SLSA) for the release archives.
       - name: Attest build provenance
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             dist/rubberduck-*.tar.gz
@@ -216,7 +216,7 @@ jobs:
 
       # Create the release with all assets and auto-generated notes.
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
