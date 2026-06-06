@@ -42,6 +42,9 @@ bundled (`--lang de`).
 
 - 🦆 **Animated ASCII duck** — swims in, blinks, quacks; typewriter effect for the
   questions. Degrades cleanly to static / `--quiet` output without a terminal.
+- 🌈 **Gradient celebration** — a rainbow confetti + EUREKA banner for the aha moment.
+- 🎬 **`demo` command** — an animated tour of every effect.
+- 📈 **Stats & history** — per-session history and aggregate metrics with an animated bar chart.
 - 🌍 **Internationalized** — English by default, German included; pick with
   `--lang`, `config.yaml`, or `RUBBERDUCK_LANG`.
 - 💬 **Interactive question dialog** — step by step through your problem.
@@ -149,8 +152,11 @@ A `brew tap` is **planned/optional** and not available yet.
 | `rubberduck --color never`         | force/disable colour (`auto`/`always`/`never`)    |
 | `rubberduck --theme midnight`      | colour scheme (`classic`/`midnight`/`mono`)       |
 | `rubberduck topics`                | show the available topics with descriptions       |
+| `rubberduck languages`             | list the interface languages                      |
+| `rubberduck demo`                  | play an animated demo of every effect             |
+| `rubberduck stats [--reset]`       | aggregate stats from your history (`--reset` clears) |
 | `rubberduck completions zsh`       | print shell completions                           |
-| `rubberduck config show`           | show settings (`init`/`show`/`path`)              |
+| `rubberduck config show`           | manage settings (`init`/`show`/`path`/`set <k> <v>`) |
 | `rubberduck --version`             | print the version                                 |
 | `rubberduck self update [--check]` | update (`--check`: check only)                    |
 | `rubberduck self uninstall`        | remove rubberduck along with config and logs      |
@@ -193,6 +199,28 @@ summary shows the time to solution and the average per question.
 default). Without `--topic`, and in a real terminal, an interactive picker
 appears.
 
+## Demo
+
+`rubberduck demo` plays an animated tour of every effect — the gradient title,
+the duck swimming in, the typewriter speech bubble, a quack, the thinking
+spinner, all moods, a colour preview of every theme, and the confetti
+celebration. It respects `--speed`, `--no-anim`, `--theme` and `--color`.
+
+## Statistics & history
+
+When enabled (the default), each finished session is appended as one JSON line to
+`~/.rubberduck/history.jsonl`. `rubberduck stats` shows aggregate metrics —
+sessions, solve rate, average session length and average time to solution — plus
+an animated per-topic bar chart.
+
+```sh
+rubberduck stats               # show your stats
+rubberduck stats --reset       # clear the recorded history
+rubberduck config set history off   # stop recording entirely
+```
+
+History stays **local and offline** — nothing is ever sent anywhere.
+
 ## Editing questions
 
 The question pool lives at `~/.config/rubberduck/questions.<lang>.yaml`
@@ -219,7 +247,8 @@ Reach custom topics via `--topic <name>`, e.g. `rubberduck --topic my-team`.
 ## Settings (`config.yaml`)
 
 Persistent preferences go to `~/.config/rubberduck/config.yaml`. CLI flags always
-win. Manage it with `rubberduck config init|show|path`. Example with the defaults:
+win. Manage it with `rubberduck config init|show|path|set`, e.g.
+`rubberduck config set theme midnight`. Example with the defaults:
 
 ```yaml
 color: auto          # auto | always | never
@@ -229,6 +258,7 @@ speed: normal        # slow | normal | fast
 typewriter: true
 default_topic: default
 language: en          # en | de
+history: true         # record sessions for `stats`
 ```
 
 A broken `config.yaml` does not take rubberduck down — it reports it once and
@@ -296,10 +326,12 @@ Clearly separated layers, trait-based and testable:
 | `ui::animate` | `Animation` trait, `Player`, `Frame`, `Easing`                    |
 | `ui::duck`    | DRY pose builder + swim/quack/celebrate animations                |
 | `ui::scene`   | `SpeechScene`: typewriter speech bubble over a live duck          |
+| `ui::gradient`| RGB gradients for the banner, confetti and charts                 |
 | `ui` (`Ui`)   | facade: resolves TTY/colour, degrades cleanly                     |
-| `app`         | controller: topic selection, question dialog, aha, statistics     |
+| `app`         | controller: topic selection, question dialog, aha                 |
+| `demo` / `stats` / `history` | the demo tour, the stats view, session history    |
 | `questions` / `session` / `config` | data and state layer                         |
-| `cli` / `selfcmd` / `paths` | arguments, update/uninstall, paths                 |
+| `cli` / `selfcmd` / `paths` / `util` | arguments, update/uninstall, paths, helpers |
 
 The animation engine only knows the `Surface` trait — which is why it runs in
 tests against an in-memory buffer instead of a real terminal.
@@ -310,7 +342,7 @@ tests against an in-memory buffer instead of a real terminal.
 | ---------------- | ------------------------------------------ | ------------------- |
 | Questions        | `~/.config/rubberduck/questions.<lang>.yaml` | topics & questions  |
 | Settings         | `~/.config/rubberduck/config.yaml`         | theme, speed, lang … |
-| Logs / data      | `~/.rubberduck/`                           | `session-<date>.md` |
+| Logs / data      | `~/.rubberduck/`                           | `session-<date>.md`, `history.jsonl` |
 | Config override  | `$RUBBERDUCK_CONFIG_DIR`                   | overrides config path |
 | Data override    | `$RUBBERDUCK_DATA_DIR`                     | overrides data path |
 | Language override | `$RUBBERDUCK_LANG`                        | `en` / `de`         |

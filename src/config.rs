@@ -6,12 +6,25 @@
 
 use crate::i18n::Lang;
 use crate::paths;
-use crate::ui::theme::ColorChoice;
+use crate::ui::theme::{ColorChoice, Theme};
 use crate::ui::UiSettings;
-use anyhow::{Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
+use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
+
+/// All settable configuration keys (for `config set` help and validation).
+pub const KEYS: &[&str] = &[
+    "color",
+    "theme",
+    "animations",
+    "speed",
+    "typewriter",
+    "default_topic",
+    "language",
+    "history",
+];
 
 /// Animation speed (also the `--speed` CLI value).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, clap::ValueEnum, Default)]
@@ -79,6 +92,8 @@ pub struct Config {
     pub default_topic: String,
     /// User-interface language (default: English).
     pub language: Lang,
+    /// Whether finished sessions are recorded to the history (for `stats`).
+    pub history: bool,
 }
 
 impl Default for Config {
@@ -91,6 +106,7 @@ impl Default for Config {
             typewriter: true,
             default_topic: crate::questions::DEFAULT_TOPIC.to_string(),
             language: Lang::English,
+            history: true,
         }
     }
 }
@@ -142,6 +158,36 @@ impl Config {
         Ok(path)
     }
 
+    /// Sets a setting from a string `key`/`value` pair (used by `config set`).
+    ///
+    /// Validates the value against the field's type; returns an error naming the
+    /// valid options on a bad key or value.
+    pub fn set(&mut self, key: &str, value: &str) -> Result<()> {
+        match key {
+            "color" => self.color = parse_enum::<ColorPref>(value, key)?,
+            "theme" => {
+                if !Theme::NAMES.contains(&value) {
+                    bail!(
+                        "Invalid theme '{value}'. Valid: {}",
+                        Theme::NAMES.join(", ")
+                    );
+                }
+                self.theme = value.to_string();
+            }
+            "animations" => self.animations = parse_bool(value, key)?,
+            "speed" => self.speed = parse_enum::<Speed>(value, key)?,
+            "typewriter" => self.typewriter = parse_bool(value, key)?,
+            "default_topic" => self.default_topic = value.to_string(),
+            "language" => {
+                self.language = Lang::from_code(value)
+                    .ok_or_else(|| anyhow!("Invalid language '{value}'. Valid: en, de"))?;
+            }
+            "history" => self.history = parse_bool(value, key)?,
+            other => bail!("Unknown setting '{other}'. Valid keys: {}", KEYS.join(", ")),
+        }
+        Ok(())
+    }
+
     /// Base [`UiSettings`] from this configuration (before CLI overrides).
     #[must_use]
     pub fn base_ui_settings(&self) -> UiSettings {
@@ -154,6 +200,22 @@ impl Config {
             quiet: false,
             lang: self.language,
         }
+    }
+}
+
+/// Parses a clap `ValueEnum` from a string (case-insensitive).
+fn parse_enum<T: ValueEnum>(value: &str, key: &str) -> Result<T> {
+    T::from_str(value, true).map_err(|_| anyhow!("Invalid value '{value}' for '{key}'."))
+}
+
+/// Parses a permissive boolean (`true/false/on/off/yes/no/1/0`).
+fn parse_bool(value: &str, key: &str) -> Result<bool> {
+    match value.to_ascii_lowercase().as_str() {
+        "true" | "on" | "yes" | "1" => Ok(true),
+        "false" | "off" | "no" | "0" => Ok(false),
+        _ => Err(anyhow!(
+            "Invalid boolean '{value}' for '{key}' (use true/false)."
+        )),
     }
 }
 
@@ -202,5 +264,22 @@ mod tests {
     fn speed_multipliers_are_ordered() {
         assert!(Speed::Slow.multiplier() < Speed::Normal.multiplier());
         assert!(Speed::Normal.multiplier() < Speed::Fast.multiplier());
+    }
+
+    #[test]
+    fn set_updates_and_validates() {
+        let mut c = Config::default();
+        c.set("theme", "midnight").unwrap();
+        assert_eq!(c.theme, "midnight");
+        c.set("history", "off").unwrap();
+        assert!(!c.history);
+        c.set("language", "de").unwrap();
+        assert_eq!(c.language, Lang::German);
+        c.set("speed", "fast").unwrap();
+        assert_eq!(c.speed, Speed::Fast);
+        // Bad key, bad theme, bad bool are all rejected.
+        assert!(c.set("nope", "x").is_err());
+        assert!(c.set("theme", "bogus").is_err());
+        assert!(c.set("animations", "maybe").is_err());
     }
 }

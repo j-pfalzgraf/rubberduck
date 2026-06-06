@@ -26,18 +26,21 @@ pub struct App {
     ui: Ui,
     pool: QuestionPool,
     default_topic: String,
+    record_history: bool,
     tr: Tr,
 }
 
 impl App {
-    /// New app from the UI, the question pool and the configured default topic.
+    /// New app from the UI, the question pool, the default topic and whether to
+    /// record finished sessions to the history (for `stats`).
     #[must_use]
-    pub fn new(ui: Ui, pool: QuestionPool, default_topic: String) -> Self {
+    pub fn new(ui: Ui, pool: QuestionPool, default_topic: String, record_history: bool) -> Self {
         let tr = ui.tr();
         Self {
             ui,
             pool,
             default_topic,
+            record_history,
             tr,
         }
     }
@@ -58,6 +61,11 @@ impl App {
             let path = session::write_log(&transcript, self.tr)?;
             let msg = self.tr.log_saved(&path.display().to_string());
             println!("{}", self.ui.styler().dim(&msg));
+        }
+
+        // Record the session for `stats` (best-effort; skip trivial no-op runs).
+        if self.record_history && (!transcript.entries.is_empty() || transcript.aha.is_some()) {
+            let _ = crate::history::append(&crate::history::Record::from_transcript(&transcript));
         }
         Ok(())
     }

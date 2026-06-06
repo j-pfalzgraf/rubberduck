@@ -11,19 +11,24 @@
 //! - [`questions`] / [`session`] / [`config`] – data and state layer.
 //! - [`i18n`] – languages and the translator.
 //! - [`cli`] – argument parsing; [`selfcmd`] – update/uninstall.
-//! - [`paths`] – platform-appropriate paths.
+//! - [`demo`] – the animated tour; [`history`]/[`stats`] – session insights.
+//! - [`paths`] – platform-appropriate paths; [`util`] – small helpers.
 
 #![warn(missing_docs)]
 
 pub mod app;
 pub mod cli;
 pub mod config;
+pub mod demo;
+pub mod history;
 pub mod i18n;
 pub mod paths;
 pub mod questions;
 pub mod selfcmd;
 pub mod session;
+pub mod stats;
 pub mod ui;
+pub mod util;
 
 use anyhow::Result;
 use clap::{CommandFactory, Parser};
@@ -52,6 +57,9 @@ pub fn run() -> Result<()> {
             }
         }
         Some(Command::Topics) => list_topics(&cli),
+        Some(Command::Languages) => languages_command(&cli),
+        Some(Command::Demo) => demo_command(&cli),
+        Some(Command::Stats { reset }) => stats_command(&cli, reset),
         Some(Command::Completions { shell }) => {
             print_completions(shell);
             Ok(())
@@ -73,7 +81,7 @@ fn run_session(cli: &Cli) -> Result<()> {
     let lang = settings.lang;
     let ui = Ui::new(settings);
     let pool = questions::load_or_init(lang)?;
-    let mut app = App::new(ui, pool, config.default_topic.clone());
+    let mut app = App::new(ui, pool, config.default_topic.clone(), config.history);
     app.run(cli.topic.as_deref(), cli.log)
 }
 
@@ -153,8 +161,53 @@ fn config_command(cli: &Cli, action: ConfigAction) -> Result<()> {
                 );
             }
         }
+        ConfigAction::Set { key, value } => {
+            let mut updated = config.clone();
+            updated.set(&key, &value)?;
+            updated.save()?;
+            println!("{}", st.success(&tr.config_set_done(&key, &value)));
+        }
     }
     Ok(())
+}
+
+/// Lists the available interface languages (`*` marks the active one).
+fn languages_command(cli: &Cli) -> Result<()> {
+    let config = Config::load_or_default();
+    let ui = Ui::new(ui_settings(&config, cli));
+    let st = ui.styler();
+    let tr = ui.tr();
+    let active = tr.lang();
+
+    println!("{}", st.accent(tr.languages_header()));
+    for lang in Lang::ALL {
+        let marker = if lang == active {
+            st.success(" *")
+        } else {
+            "  ".to_string()
+        };
+        println!(
+            "{} {}  {}",
+            marker,
+            st.text(lang.code()),
+            st.dim(lang.label())
+        );
+    }
+    Ok(())
+}
+
+/// Plays the animated demo tour.
+fn demo_command(cli: &Cli) -> Result<()> {
+    let config = Config::load_or_default();
+    let mut ui = Ui::new(ui_settings(&config, cli));
+    demo::run(&mut ui)
+}
+
+/// Shows aggregate statistics from the session history (or clears it).
+fn stats_command(cli: &Cli, reset: bool) -> Result<()> {
+    let config = Config::load_or_default();
+    let mut ui = Ui::new(ui_settings(&config, cli));
+    stats::show(&mut ui, reset)
 }
 
 /// Writes shell completions for `shell` to stdout.

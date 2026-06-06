@@ -5,6 +5,7 @@
 //! on top of it.
 
 use crate::ui::animate::{Animation, Clip, Easing, Frame};
+use crate::ui::gradient::{self, Gradient};
 use crate::ui::theme::Styler;
 use std::time::Duration;
 
@@ -129,26 +130,36 @@ pub fn quack_clip(mood: Mood, styler: Styler, word: &str) -> Clip {
     )
 }
 
-/// Celebration animation for the aha moment: sparkles, a banner and a cheering duck.
+/// Celebration animation for the aha moment: confetti, a gradient banner and a
+/// cheering duck.
 #[must_use]
-pub fn celebrate_clip(styler: Styler, banner: &str) -> Clip {
-    let make = |sparkle: &str| {
-        let mut lines = vec![styler.success(&format!("   {sparkle}  {banner}  {sparkle}"))];
+pub fn celebrate_clip(styler: Styler, banner: &str, width: usize, gradient: &Gradient) -> Clip {
+    let cols = width.clamp(16, 48);
+    let frame_for = |phase: usize| {
+        let mut lines = vec![
+            confetti_row(cols, phase, gradient, styler.enabled()),
+            gradient::paint(&format!("✦  {banner}  ✦"), gradient, styler.enabled()),
+        ];
         lines.extend(duck_lines(&duck_for(Mood::Celebrating), styler));
         lines.push(styler.accent(r"   \o/  \o/  \o/"));
+        lines.push(confetti_row(cols, phase + 2, gradient, styler.enabled()));
         Frame::new(lines)
     };
-    Clip::new(
-        vec![
-            make("*"),
-            make("✦"),
-            make("✧"),
-            make("✶"),
-            make("✦"),
-            make("*"),
-        ],
-        Duration::from_millis(160),
-    )
+    Clip::new((0..6).map(frame_for).collect(), Duration::from_millis(150))
+}
+
+/// Builds one shifting row of confetti, coloured along the gradient.
+fn confetti_row(cols: usize, phase: usize, gradient: &Gradient, enabled: bool) -> String {
+    const GLYPHS: [char; 5] = ['·', '✦', '✧', '✶', '*'];
+    let mut plain = String::with_capacity(cols);
+    for col in 0..cols {
+        if (col + phase).is_multiple_of(3) {
+            plain.push(GLYPHS[(col + phase) % GLYPHS.len()]);
+        } else {
+            plain.push(' ');
+        }
+    }
+    gradient::paint(&plain, gradient, enabled)
 }
 
 /// The duck swims into frame from the right – with an undulating water line.

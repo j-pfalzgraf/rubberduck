@@ -6,6 +6,7 @@
 
 pub mod animate;
 pub mod duck;
+pub mod gradient;
 pub mod scene;
 pub mod spinner;
 pub mod surface;
@@ -13,7 +14,8 @@ pub mod text;
 pub mod theme;
 
 use crate::i18n::{Lang, Tr};
-use crate::ui::animate::Player;
+use crate::ui::animate::{Animation, Player};
+use crate::ui::gradient::Gradient;
 use crate::ui::scene::SpeechScene;
 use crate::ui::spinner::Thinking;
 use crate::ui::surface::{Surface, TermSurface};
@@ -150,6 +152,41 @@ impl Ui {
         self.stdout_tty && self.settings.animations && !self.settings.quiet
     }
 
+    /// Plays an arbitrary animation with the current settings (demo/stats use this).
+    pub fn play(&mut self, anim: &dyn Animation) -> io::Result<()> {
+        let mut surface = TermSurface::stdout();
+        Player::new(&mut surface, self.animating(), self.settings.speed).play(anim)
+    }
+
+    /// Current terminal width in columns.
+    #[must_use]
+    pub fn width(&self) -> usize {
+        TermSurface::stdout().width() as usize
+    }
+
+    /// Prints a one-line gradient banner (a plain accent title in `quiet` mode,
+    /// and plain text when colour is off).
+    pub fn gradient_banner(&self, text: &str, gradient: &Gradient) {
+        if self.settings.quiet {
+            println!("{}", self.styler.accent(text));
+        } else {
+            println!("{}", gradient::paint(text, gradient, self.styler.enabled()));
+        }
+    }
+
+    /// Prints a colour preview of each built-in theme (just the names in `quiet`
+    /// mode, since the duck is suppressed there).
+    pub fn theme_previews(&self) {
+        for name in Theme::NAMES {
+            if self.settings.quiet {
+                println!("  {name}");
+            } else {
+                let styler = Styler::new(Theme::by_name(name), self.styler.enabled());
+                println!("  {}", styler.duck(&format!("{name:<9} <( o)___")));
+            }
+        }
+    }
+
     /// Inner speech-bubble width matching the terminal width.
     fn bubble_width(&self, surface: &impl Surface) -> usize {
         (surface.width() as usize).saturating_sub(8).clamp(16, 64)
@@ -197,7 +234,9 @@ impl Ui {
             return Ok(());
         }
         let mut surface = TermSurface::stdout();
-        let clip = duck::celebrate_clip(self.styler, self.tr.eureka());
+        let width = surface.width() as usize;
+        let gradient = Gradient::rainbow();
+        let clip = duck::celebrate_clip(self.styler, self.tr.eureka(), width, &gradient);
         Player::new(&mut surface, self.animating(), self.settings.speed).play(&clip)
     }
 

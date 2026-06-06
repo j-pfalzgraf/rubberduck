@@ -1651,6 +1651,7 @@ dependencies = [
  "self-replace",
  "self_update",
  "serde",
+ "serde_json",
  "serde_yaml",
  "tempfile",
  "unicode-width",

@@ -9,6 +9,7 @@
 //! `config.yaml` › English. The system locale is intentionally **not** read, so
 //! the default stays deterministically English.
 
+use crate::ui::Mood;
 use std::fmt;
 
 /// A supported user-interface language.
@@ -329,6 +330,180 @@ impl Tr {
         }
     }
 
+    /// `config set` confirmation.
+    #[must_use]
+    pub fn config_set_done(self, key: &str, value: &str) -> String {
+        match self.lang {
+            Lang::English => format!("Set {key} = {value}"),
+            Lang::German => format!("Gesetzt: {key} = {value}"),
+        }
+    }
+
+    // ----- demo -----------------------------------------------------------
+
+    /// Title banner of `rubberduck demo`.
+    #[must_use]
+    pub fn demo_title(self) -> &'static str {
+        match self.lang {
+            Lang::English => "rubberduck — animation demo",
+            Lang::German => "rubberduck — Animations-Demo",
+        }
+    }
+
+    /// Typewriter intro line of the demo.
+    #[must_use]
+    pub fn demo_intro(self) -> &'static str {
+        match self.lang {
+            Lang::English => {
+                "Watch closely — I type, I swim, I quack, and I celebrate when you win."
+            }
+            Lang::German => {
+                "Schau genau hin – ich tippe, schwimme, quake und feiere, wenn du gewinnst."
+            }
+        }
+    }
+
+    /// Demo section heading: moods.
+    #[must_use]
+    pub fn demo_section_moods(self) -> &'static str {
+        match self.lang {
+            Lang::English => "Moods",
+            Lang::German => "Stimmungen",
+        }
+    }
+
+    /// Demo section heading: themes.
+    #[must_use]
+    pub fn demo_section_themes(self) -> &'static str {
+        match self.lang {
+            Lang::English => "Themes",
+            Lang::German => "Themes",
+        }
+    }
+
+    /// Closing line of the demo.
+    #[must_use]
+    pub fn demo_done(self) -> &'static str {
+        match self.lang {
+            Lang::English => "That's the tour — happy debugging!",
+            Lang::German => "Das war die Tour – frohes Debuggen!",
+        }
+    }
+
+    /// Localized label for a duck [`Mood`] (used by the demo showcase).
+    #[must_use]
+    pub fn mood_label(self, mood: Mood) -> &'static str {
+        match self.lang {
+            Lang::English => match mood {
+                Mood::Idle => "Idle",
+                Mood::Thinking => "Thinking",
+                Mood::Listening => "Listening",
+                Mood::Happy => "Happy",
+                Mood::Curious => "Curious",
+                Mood::Surprised => "Surprised",
+                Mood::Celebrating => "Celebrating",
+                Mood::Sleeping => "Sleeping",
+            },
+            Lang::German => match mood {
+                Mood::Idle => "Ruhig",
+                Mood::Thinking => "Nachdenklich",
+                Mood::Listening => "Zuhörend",
+                Mood::Happy => "Glücklich",
+                Mood::Curious => "Neugierig",
+                Mood::Surprised => "Überrascht",
+                Mood::Celebrating => "Feiernd",
+                Mood::Sleeping => "Schläft",
+            },
+        }
+    }
+
+    // ----- stats ----------------------------------------------------------
+
+    /// Heading of `rubberduck stats`.
+    #[must_use]
+    pub fn stats_header(self) -> &'static str {
+        match self.lang {
+            Lang::English => "Your debugging stats",
+            Lang::German => "Deine Debugging-Statistik",
+        }
+    }
+
+    /// `stats` with no history yet.
+    #[must_use]
+    pub fn stats_empty(self) -> &'static str {
+        match self.lang {
+            Lang::English => "No sessions recorded yet — run one to build your history.",
+            Lang::German => {
+                "Noch keine Sessions aufgezeichnet – starte eine, um deine Historie aufzubauen."
+            }
+        }
+    }
+
+    /// Stats line: number of sessions.
+    #[must_use]
+    pub fn stats_sessions(self, n: usize) -> String {
+        match self.lang {
+            Lang::English => format!("Sessions: {n}"),
+            Lang::German => format!("Sessions: {n}"),
+        }
+    }
+
+    /// Stats line: solved count and rate.
+    #[must_use]
+    pub fn stats_solved(self, solved: usize, total: usize, pct: u32) -> String {
+        match self.lang {
+            Lang::English => format!("Solved: {solved}/{total} ({pct}%)"),
+            Lang::German => format!("Gelöst: {solved}/{total} ({pct}%)"),
+        }
+    }
+
+    /// Stats line: average session length.
+    #[must_use]
+    pub fn stats_avg_session(self, d: &str) -> String {
+        match self.lang {
+            Lang::English => format!("Avg session: {d}"),
+            Lang::German => format!("Ø Session: {d}"),
+        }
+    }
+
+    /// Stats line: average time to solution.
+    #[must_use]
+    pub fn stats_avg_solution(self, d: &str) -> String {
+        match self.lang {
+            Lang::English => format!("Avg time to solution: {d}"),
+            Lang::German => format!("Ø Zeit bis zur Lösung: {d}"),
+        }
+    }
+
+    /// Stats sub-heading: per-topic breakdown.
+    #[must_use]
+    pub fn stats_by_topic(self) -> &'static str {
+        match self.lang {
+            Lang::English => "By topic",
+            Lang::German => "Nach Thema",
+        }
+    }
+
+    /// Confirmation that the history was cleared.
+    #[must_use]
+    pub fn stats_cleared(self) -> &'static str {
+        match self.lang {
+            Lang::English => "History cleared.",
+            Lang::German => "Historie gelöscht.",
+        }
+    }
+
+    // ----- languages ------------------------------------------------------
+
+    /// Heading of `rubberduck languages`.
+    #[must_use]
+    pub fn languages_header(self) -> &'static str {
+        match self.lang {
+            Lang::English => "Available languages:",
+            Lang::German => "Verfügbare Sprachen:",
+        }
+    }
+
     // ----- self update / uninstall ----------------------------------------
 
     /// `self update --check`: an update is available.
@@ -618,5 +793,11 @@ mod tests {
         assert!(yaml.contains("de"));
         let back: Lang = serde_yaml::from_str("en").unwrap();
         assert_eq!(back, Lang::English);
+    }
+
+    #[test]
+    fn mood_labels_localize() {
+        assert_eq!(Tr::new(Lang::English).mood_label(Mood::Happy), "Happy");
+        assert_eq!(Tr::new(Lang::German).mood_label(Mood::Happy), "Glücklich");
     }
 }

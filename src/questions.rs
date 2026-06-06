@@ -98,11 +98,18 @@ impl QuestionPool {
         Ok(Self { topics })
     }
 
-    /// The topic `name`; error listing available topics if unknown.
+    /// The topic `name`; error listing available topics (and a "did you mean?"
+    /// suggestion) if unknown.
     pub fn topic(&self, name: &str) -> Result<&Topic> {
         self.topics.get(name).ok_or_else(|| {
-            let available = self.topic_names().join(", ");
-            anyhow!("Unknown topic '{name}'. Available: {available}")
+            let names = self.topic_names();
+            let suggestion = crate::util::closest(name, &names, 2)
+                .map(|s| format!(" Did you mean '{s}'?"))
+                .unwrap_or_default();
+            anyhow!(
+                "Unknown topic '{name}'.{suggestion} Available: {}",
+                names.join(", ")
+            )
         })
     }
 
@@ -213,9 +220,16 @@ mod tests {
     #[test]
     fn unknown_topic_lists_available() {
         let pool = embedded(Lang::English).unwrap();
-        let err = pool.topic("nope").unwrap_err().to_string();
+        let err = pool.topic("zzzz").unwrap_err().to_string();
         assert!(err.contains("Unknown topic"));
         assert!(err.contains("default"));
+    }
+
+    #[test]
+    fn unknown_topic_suggests_closest() {
+        let pool = embedded(Lang::English).unwrap();
+        let err = pool.topic("logc").unwrap_err().to_string();
+        assert!(err.contains("Did you mean 'logic'?"), "got: {err}");
     }
 
     #[test]

@@ -78,6 +78,19 @@ pub enum Command {
     /// List the available topics with their descriptions.
     Topics,
 
+    /// List the available interface languages.
+    Languages,
+
+    /// Play an animated demo of every effect.
+    Demo,
+
+    /// Show aggregate statistics from your session history.
+    Stats {
+        /// Clear the recorded history instead of showing it.
+        #[arg(long)]
+        reset: bool,
+    },
+
     /// Print shell completions (bash, zsh, fish, powershell, elvish).
     Completions {
         /// Target shell.
@@ -110,6 +123,13 @@ pub enum ConfigAction {
     Show,
     /// Print only the path of `config.yaml`.
     Path,
+    /// Set a setting, e.g. `config set theme midnight`.
+    Set {
+        /// Setting name (e.g. theme, color, speed, language, history).
+        key: String,
+        /// New value.
+        value: String,
+    },
 }
 
 /// Actions under `rubberduck self`.
@@ -200,6 +220,28 @@ mod tests {
         assert!(matches!(cli.command, Some(Command::Topics)));
         assert_eq!(cli.color, Some(ColorPref::Never));
         assert_eq!(cli.lang, Some(Lang::German));
+    }
+
+    #[test]
+    fn parses_new_commands() {
+        assert!(matches!(
+            Cli::parse_from(["rubberduck", "demo"]).command,
+            Some(Command::Demo)
+        ));
+        assert!(matches!(
+            Cli::parse_from(["rubberduck", "languages"]).command,
+            Some(Command::Languages)
+        ));
+        assert!(matches!(
+            Cli::parse_from(["rubberduck", "stats", "--reset"]).command,
+            Some(Command::Stats { reset: true })
+        ));
+        assert!(matches!(
+            Cli::parse_from(["rubberduck", "config", "set", "theme", "midnight"]).command,
+            Some(Command::Config {
+                action: ConfigAction::Set { .. }
+            })
+        ));
     }
 
     #[test]
