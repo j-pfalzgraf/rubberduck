@@ -105,7 +105,7 @@ pub fn clear() -> Result<()> {
 }
 
 /// Aggregate metrics over a topic.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 pub struct TopicAggregate {
     /// Number of sessions on this topic.
     pub sessions: usize,

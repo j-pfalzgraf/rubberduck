@@ -54,9 +54,15 @@ pub struct Theme {
     pub water: Color,
 }
 
+/// Shorthand for an RGB colour (keeps the theme table compact).
+const fn rgb(r: u8, g: u8, b: u8) -> Color {
+    Color::Rgb { r, g, b }
+}
+
 impl Theme {
     /// Names of all built-in themes.
-    pub const NAMES: &'static [&'static str] = &["classic", "midnight", "mono"];
+    pub const NAMES: &'static [&'static str] =
+        &["classic", "midnight", "mono", "ocean", "forest", "candy"];
 
     /// Warm default theme with a yellow duck.
     pub const CLASSIC: Theme = Theme {
@@ -110,12 +116,51 @@ impl Theme {
         water: Color::Grey,
     };
 
+    /// Cool ocean theme.
+    pub const OCEAN: Theme = Theme {
+        name: "ocean",
+        duck: rgb(38, 166, 222),
+        accent: rgb(144, 224, 239),
+        bubble: Color::Grey,
+        text: Color::White,
+        dim: Color::DarkGrey,
+        success: rgb(64, 200, 160),
+        water: rgb(20, 80, 160),
+    };
+
+    /// Leafy forest theme.
+    pub const FOREST: Theme = Theme {
+        name: "forest",
+        duck: rgb(124, 193, 86),
+        accent: rgb(198, 222, 120),
+        bubble: Color::Grey,
+        text: Color::White,
+        dim: Color::DarkGrey,
+        success: rgb(120, 210, 140),
+        water: rgb(60, 120, 90),
+    };
+
+    /// Sweet candy theme.
+    pub const CANDY: Theme = Theme {
+        name: "candy",
+        duck: rgb(255, 133, 206),
+        accent: rgb(255, 214, 128),
+        bubble: Color::Grey,
+        text: Color::White,
+        dim: Color::DarkGrey,
+        success: rgb(170, 230, 170),
+        water: rgb(160, 120, 220),
+    };
+
     /// Theme by name; an unknown name returns [`Theme::CLASSIC`].
     #[must_use]
     pub fn by_name(name: &str) -> Theme {
         match name {
             "midnight" => Self::MIDNIGHT,
             "mono" => Self::MONO,
+            "ocean" => Self::OCEAN,
+            "forest" => Self::FOREST,
+            "candy" => Self::CANDY,
             _ => Self::CLASSIC,
         }
     }
@@ -227,8 +272,14 @@ mod tests {
     }
 
     #[test]
-    fn unknown_theme_falls_back_to_classic() {
-        assert_eq!(Theme::by_name("gibtsnicht").name, "classic");
-        assert_eq!(Theme::by_name("midnight").name, "midnight");
+    fn named_themes_resolve_and_unknown_falls_back() {
+        for name in Theme::NAMES {
+            assert_eq!(
+                Theme::by_name(name).name,
+                *name,
+                "theme {name} should resolve"
+            );
+        }
+        assert_eq!(Theme::by_name("nope").name, "classic");
     }
 }

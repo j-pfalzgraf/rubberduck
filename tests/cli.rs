@@ -122,3 +122,56 @@ fn quiet_non_tty_session_runs_and_exits_cleanly() {
         .assert()
         .success();
 }
+
+#[test]
+fn man_page_renders() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .arg("man")
+        .assert()
+        .success()
+        .stdout(contains("rubberduck"));
+}
+
+#[test]
+fn stats_json_is_valid_when_empty() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .args(["stats", "--json"])
+        .assert()
+        .success()
+        .stdout(contains("\"sessions\": 0"))
+        .stdout(contains("\"per_topic\""));
+}
+
+#[test]
+fn config_set_then_reset() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .args(["config", "set", "theme", "ocean"])
+        .assert()
+        .success();
+    duck(tmp.path())
+        .args(["config", "show"])
+        .assert()
+        .success()
+        .stdout(contains("theme: ocean"));
+    duck(tmp.path())
+        .args(["config", "reset"])
+        .assert()
+        .success();
+    duck(tmp.path())
+        .args(["config", "show"])
+        .assert()
+        .success()
+        .stdout(contains("theme: classic"));
+}
+
+#[test]
+fn config_set_rejects_bad_value() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .args(["config", "set", "theme", "bogus"])
+        .assert()
+        .failure();
+}

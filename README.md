@@ -150,13 +150,14 @@ A `brew tap` is **planned/optional** and not available yet.
 | `rubberduck --no-anim`             | static duck (no typewriter/swim)                  |
 | `rubberduck --speed fast`          | animation speed (`slow`/`normal`/`fast`)          |
 | `rubberduck --color never`         | force/disable colour (`auto`/`always`/`never`)    |
-| `rubberduck --theme midnight`      | colour scheme (`classic`/`midnight`/`mono`)       |
+| `rubberduck --theme ocean`         | colour scheme (6 themes — see Appearance)         |
 | `rubberduck topics`                | show the available topics with descriptions       |
 | `rubberduck languages`             | list the interface languages                      |
 | `rubberduck demo`                  | play an animated demo of every effect             |
-| `rubberduck stats [--reset]`       | aggregate stats from your history (`--reset` clears) |
+| `rubberduck stats [--reset\|--json]` | aggregate stats (`--json` for scripts, `--reset` clears) |
 | `rubberduck completions zsh`       | print shell completions                           |
-| `rubberduck config show`           | manage settings (`init`/`show`/`path`/`set <k> <v>`) |
+| `rubberduck man`                   | print a man page (roff)                           |
+| `rubberduck config show`           | manage settings (`init`/`show`/`path`/`set`/`reset`) |
 | `rubberduck --version`             | print the version                                 |
 | `rubberduck self update [--check]` | update (`--check`: check only)                    |
 | `rubberduck self uninstall`        | remove rubberduck along with config and logs      |
@@ -185,7 +186,8 @@ summary shows the time to solution and the average per question.
 
 ## Animations & appearance
 
-- **`--theme`** `classic` (yellow duck), `midnight` (dark, RGB) or `mono`.
+- **`--theme`** one of `classic`, `midnight`, `mono`, `ocean`, `forest`, `candy`
+  (also settable for good via `config set theme <name>`).
 - **`--speed`** `slow` / `normal` / `fast` controls the pace.
 - **`--no-anim`** shows everything statically (one duck, no typewriter) — handy
   over SSH or on slow terminals.
@@ -214,7 +216,8 @@ sessions, solve rate, average session length and average time to solution — pl
 an animated per-topic bar chart.
 
 ```sh
-rubberduck stats               # show your stats
+rubberduck stats               # show your stats (animated)
+rubberduck stats --json        # machine-readable, for scripts
 rubberduck stats --reset       # clear the recorded history
 rubberduck config set history off   # stop recording entirely
 ```
@@ -247,7 +250,7 @@ Reach custom topics via `--topic <name>`, e.g. `rubberduck --topic my-team`.
 ## Settings (`config.yaml`)
 
 Persistent preferences go to `~/.config/rubberduck/config.yaml`. CLI flags always
-win. Manage it with `rubberduck config init|show|path|set`, e.g.
+win. Manage it with `rubberduck config init|show|path|set|reset`, e.g.
 `rubberduck config set theme midnight`. Example with the defaults:
 
 ```yaml
@@ -285,6 +288,9 @@ rubberduck completions fish > ~/.config/fish/completions/rubberduck.fish
 ```
 
 Supported: `bash`, `zsh`, `fish`, `powershell`, `elvish`.
+
+A man page is available too: `rubberduck man > rubberduck.1`, then view it with
+`man ./rubberduck.1`.
 
 ## Update & uninstall
 

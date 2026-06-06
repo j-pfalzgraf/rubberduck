@@ -30,7 +30,7 @@ pub mod stats;
 pub mod ui;
 pub mod util;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{CommandFactory, Parser};
 
 use app::App;
@@ -59,11 +59,12 @@ pub fn run() -> Result<()> {
         Some(Command::Topics) => list_topics(&cli),
         Some(Command::Languages) => languages_command(&cli),
         Some(Command::Demo) => demo_command(&cli),
-        Some(Command::Stats { reset }) => stats_command(&cli, reset),
+        Some(Command::Stats { reset, json }) => stats_command(&cli, reset, json),
         Some(Command::Completions { shell }) => {
             print_completions(shell);
             Ok(())
         }
+        Some(Command::Man) => print_man(),
         Some(Command::Config { action }) => config_command(&cli, action),
         None => run_session(&cli),
     }
@@ -167,6 +168,13 @@ fn config_command(cli: &Cli, action: ConfigAction) -> Result<()> {
             updated.save()?;
             println!("{}", st.success(&tr.config_set_done(&key, &value)));
         }
+        ConfigAction::Reset => {
+            let written = Config::default().save()?;
+            println!(
+                "{}",
+                st.success(&tr.config_reset_done(&written.display().to_string()))
+            );
+        }
     }
     Ok(())
 }
@@ -204,14 +212,22 @@ fn demo_command(cli: &Cli) -> Result<()> {
 }
 
 /// Shows aggregate statistics from the session history (or clears it).
-fn stats_command(cli: &Cli, reset: bool) -> Result<()> {
+fn stats_command(cli: &Cli, reset: bool, json: bool) -> Result<()> {
     let config = Config::load_or_default();
     let mut ui = Ui::new(ui_settings(&config, cli));
-    stats::show(&mut ui, reset)
+    stats::show(&mut ui, reset, json)
 }
 
 /// Writes shell completions for `shell` to stdout.
 fn print_completions(shell: clap_complete::Shell) {
     let mut cmd = Cli::command();
     clap_complete::generate(shell, &mut cmd, "rubberduck", &mut std::io::stdout());
+}
+
+/// Writes a man page (roff) to stdout.
+fn print_man() -> Result<()> {
+    clap_mangen::Man::new(Cli::command())
+        .render(&mut std::io::stdout())
+        .context("Could not render man page")?;
+    Ok(())
 }

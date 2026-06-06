@@ -339,6 +339,15 @@ impl Tr {
         }
     }
 
+    /// `config reset` confirmation.
+    #[must_use]
+    pub fn config_reset_done(self, path: &str) -> String {
+        match self.lang {
+            Lang::English => format!("Reset to defaults: {path}"),
+            Lang::German => format!("Auf Standard zurückgesetzt: {path}"),
+        }
+    }
+
     // ----- demo -----------------------------------------------------------
 
     /// Title banner of `rubberduck demo`.

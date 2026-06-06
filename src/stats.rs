@@ -1,16 +1,18 @@
 //! The `rubberduck stats` view: aggregate session metrics with an animated bar chart.
 
-use crate::history::{self, Aggregate};
+use crate::history::{self, Aggregate, TopicAggregate};
 use crate::session::format_duration;
 use crate::ui::animate::{Animation, Frame};
 use crate::ui::gradient::{self, Gradient};
 use crate::ui::theme::Styler;
 use crate::ui::Ui;
-use anyhow::Result;
+use anyhow::{Context, Result};
+use serde::Serialize;
+use std::collections::BTreeMap;
 use std::time::Duration;
 
-/// Shows aggregate statistics, or clears the history when `reset` is set.
-pub fn show(ui: &mut Ui, reset: bool) -> Result<()> {
+/// Shows aggregate statistics, clears the history (`reset`) or prints JSON (`json`).
+pub fn show(ui: &mut Ui, reset: bool, json: bool) -> Result<()> {
     let tr = ui.tr();
     if reset {
         history::clear()?;
@@ -19,6 +21,23 @@ pub fn show(ui: &mut Ui, reset: bool) -> Result<()> {
     }
 
     let agg = history::aggregate(&history::load_all()?);
+
+    if json {
+        let view = JsonView {
+            sessions: agg.sessions,
+            solved: agg.solved,
+            solve_rate: agg.solve_rate(),
+            avg_total_seconds: agg.avg_total_seconds(),
+            avg_solution_seconds: agg.avg_solution_seconds(),
+            per_topic: &agg.per_topic,
+        };
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&view).context("Could not serialize stats")?
+        );
+        return Ok(());
+    }
+
     ui.gradient_banner(tr.stats_header(), &Gradient::ocean());
 
     if agg.is_empty() {
@@ -52,6 +71,17 @@ pub fn show(ui: &mut Ui, reset: bool) -> Result<()> {
     let chart = BarChart::new(&agg, *ui.styler(), Gradient::ocean());
     ui.play(&chart)?;
     Ok(())
+}
+
+/// Machine-readable stats view for `stats --json`.
+#[derive(Serialize)]
+struct JsonView<'a> {
+    sessions: usize,
+    solved: usize,
+    solve_rate: u32,
+    avg_total_seconds: u64,
+    avg_solution_seconds: u64,
+    per_topic: &'a BTreeMap<String, TopicAggregate>,
 }
 
 /// An animated horizontal bar chart of sessions per topic (bars grow in).

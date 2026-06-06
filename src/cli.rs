@@ -89,6 +89,9 @@ pub enum Command {
         /// Clear the recorded history instead of showing it.
         #[arg(long)]
         reset: bool,
+        /// Print machine-readable JSON instead of the animated view.
+        #[arg(long)]
+        json: bool,
     },
 
     /// Print shell completions (bash, zsh, fish, powershell, elvish).
@@ -97,6 +100,9 @@ pub enum Command {
         #[arg(value_enum)]
         shell: Shell,
     },
+
+    /// Print a man page (roff) to stdout.
+    Man,
 
     /// Manage persistent settings (config.yaml).
     Config {
@@ -130,6 +136,8 @@ pub enum ConfigAction {
         /// New value.
         value: String,
     },
+    /// Reset all settings to their defaults.
+    Reset,
 }
 
 /// Actions under `rubberduck self`.
@@ -233,13 +241,33 @@ mod tests {
             Some(Command::Languages)
         ));
         assert!(matches!(
+            Cli::parse_from(["rubberduck", "man"]).command,
+            Some(Command::Man)
+        ));
+        assert!(matches!(
             Cli::parse_from(["rubberduck", "stats", "--reset"]).command,
-            Some(Command::Stats { reset: true })
+            Some(Command::Stats {
+                reset: true,
+                json: false
+            })
+        ));
+        assert!(matches!(
+            Cli::parse_from(["rubberduck", "stats", "--json"]).command,
+            Some(Command::Stats {
+                reset: false,
+                json: true
+            })
         ));
         assert!(matches!(
             Cli::parse_from(["rubberduck", "config", "set", "theme", "midnight"]).command,
             Some(Command::Config {
                 action: ConfigAction::Set { .. }
+            })
+        ));
+        assert!(matches!(
+            Cli::parse_from(["rubberduck", "config", "reset"]).command,
+            Some(Command::Config {
+                action: ConfigAction::Reset
             })
         ));
     }
