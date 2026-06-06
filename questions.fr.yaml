@@ -1,0 +1,62 @@
+# rubberduck – banque de questions (Français)
+#
+# Édite ce fichier librement : ajoute des sujets ou des questions, ton équipe
+# peut le partager.
+#
+# Format : `topics` associe un nom de sujet à un sujet. Chaque sujet peut
+# utiliser l'une des deux formes :
+#   simple :                 riche :
+#     - "Question 1"           description: "Texte court pour le sélecteur"
+#     - "Question 2"           questions:
+#                               - "Question 1"
+#
+# Le sujet par défaut s'appelle `default`. Atteins tes propres sujets via
+# `--topic <nom>`.
+
+topics:
+  default:
+    description: "Questions générales pour (presque) n'importe quel bug."
+    questions:
+      - "Que ton code est-il censé faire exactement à cet endroit ?"
+      - "Que se passe-t-il à la place — concrètement ?"
+      - "À quoi remarques-tu précisément que quelque chose ne va pas (message d'erreur, valeur fausse, plantage) ?"
+      - "Quelle ligne ou fonction est la plus suspecte — et pourquoi celle-là ?"
+      - "Quelle hypothèse fais-tu ici qui pourrait ne pas tenir ?"
+      - "Qu'as-tu changé en dernier, juste avant l'apparition du bug ?"
+      - "Avec quelles entrées cela échoue-t-il — et avec lesquelles ça marche ?"
+      - "Si tu affiches la valeur en question juste avant cet endroit : qu'attends-tu, que vois-tu ?"
+      - "Quelle partie du problème pourrais-tu isoler ou réduire ?"
+      - "Quelle est la chose la plus simple que tu pourrais essayer ensuite ?"
+
+  logic:
+    description: "Bugs de logique, de boucles et de conditions."
+    questions:
+      - "Tes conditions sont-elles vraiment correctes (==, <, >, parenthèses, négations) ?"
+      - "Y a-t-il une erreur de décalage d'un aux limites (< vs <=, index 0 vs 1) ?"
+      - "Quels cas limites n'as-tu pas encore envisagés (vide, null, négatif, très grand) ?"
+      - "La boucle s'exécute-t-elle autant de fois que tu le penses — une de trop ou une de moins ?"
+      - "L'ordre des étapes est-il correct, ou quelque chose arrive-t-il trop tôt ou trop tard ?"
+      - "Une variable est-elle écrasée, ou conserve-t-elle en secret une ancienne valeur ?"
+      - "Si tu déroules le cas à la main sur papier : où le programme dévie-t-il en premier ?"
+
+  perf:
+    description: "Code lent : temps d'exécution, mémoire, E/S."
+    questions:
+      - "Qu'est-ce qui est lent exactement — et comment le sais-tu (mesure ou intuition) ?"
+      - "As-tu mesuré la partie lente, ou seulement supposé ?"
+      - "Quelle opération s'exécute le plus souvent — une boucle dans une boucle s'y cache-t-elle ?"
+      - "Quelque chose est-il calculé plusieurs fois alors que tu pourrais le calculer une fois et le retenir ?"
+      - "Comment le temps d'exécution croît-il quand l'entrée double ?"
+      - "Est-ce le temps CPU, la mémoire, les E/S ou le réseau ?"
+      - "Ta structure de données convient-elle au schéma d'accès (recherche, insertion, ordre) ?"
+
+  api:
+    description: "API, appels et interfaces."
+    questions:
+      - "Que dit la documentation sur ce que cet appel renvoie — et que fait-il réellement ?"
+      - "L'ordre, les types et les unités des arguments sont-ils corrects ?"
+      - "Quel code de statut ou quelle réponse d'erreur obtiens-tu exactement ?"
+      - "Gères-tu le cas d'erreur de la réponse, ou seulement le cas de succès ?"
+      - "L'authentification, les en-têtes et le type de contenu sont-ils corrects ?"
+      - "Est-ce ta requête, ou la réponse de l'autre côté ?"
+      - "Que montre un test direct (curl/Postman) comparé à ton code ?"

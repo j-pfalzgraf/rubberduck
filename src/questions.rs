@@ -143,6 +143,7 @@ pub fn embedded_yaml(lang: Lang) -> &'static str {
     match lang {
         Lang::English => include_str!("../questions.en.yaml"),
         Lang::German => include_str!("../questions.de.yaml"),
+        Lang::French => include_str!("../questions.fr.yaml"),
     }
 }
 

@@ -179,8 +179,9 @@ impl Config {
             "typewriter" => self.typewriter = parse_bool(value, key)?,
             "default_topic" => self.default_topic = value.to_string(),
             "language" => {
-                self.language = Lang::from_code(value)
-                    .ok_or_else(|| anyhow!("Invalid language '{value}'. Valid: en, de"))?;
+                self.language = Lang::from_code(value).ok_or_else(|| {
+                    anyhow!("Invalid language '{value}'. Valid: {}", Lang::code_list())
+                })?;
             }
             "history" => self.history = parse_bool(value, key)?,
             other => bail!("Unknown setting '{other}'. Valid keys: {}", KEYS.join(", ")),

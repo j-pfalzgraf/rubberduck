@@ -1,0 +1,65 @@
+# Builds the API documentation and publishes it to GitHub Pages on every push
+# to `main`. The same `-D warnings` gate as CI applies, so the published docs
+# can never contain a broken intra-doc link.
+#
+# NOTE: this needs Pages enabled for the repository with "GitHub Actions" as the
+# source (Settings → Pages → Build and deployment → Source: GitHub Actions).
+name: Docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+# Minimal by default; the deploy job widens to exactly what Pages needs.
+permissions:
+  contents: read
+
+# Allow only one concurrent deployment; don't cancel an in-progress one so a
+# running publish always finishes cleanly.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build rustdoc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Install OpenSSL headers
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
+      - name: Build documentation
+        env:
+          RUSTDOCFLAGS: -D warnings
+        run: cargo doc --no-deps --locked
+      # `cargo doc` lands the crate at /rubberduck_cli/; redirect the site root
+      # there so the Pages URL opens the docs directly.
+      - name: Add index redirect
+        run: |
+          echo '<meta http-equiv="refresh" content="0; url=rubberduck_cli/index.html">' \
+            > target/doc/index.html
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/doc
+
+  deploy:
+    name: Deploy to Pages
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write # publish to Pages
+      id-token: write # OIDC token the deploy action verifies
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

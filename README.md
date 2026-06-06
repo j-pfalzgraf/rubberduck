@@ -16,6 +16,7 @@
 ```
 
 ![CI](https://github.com/j-pfalzgraf/rubberduck/actions/workflows/ci.yml/badge.svg)
+![Docs](https://github.com/j-pfalzgraf/rubberduck/actions/workflows/docs.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Version](https://img.shields.io/badge/version-0.1.0-green)
 
@@ -36,8 +37,8 @@ blinks, quacks, and celebrates the moment the penny drops with you.
 Every session runs **fully offline**, with no external AI and no network. Only
 the built-in self-update downloads anything, and only when you ask it to.
 
-The interface is **internationalized and defaults to English**; German ships
-bundled (`--lang de`).
+The interface is **internationalized and defaults to English**; German and
+French ship bundled (`--lang de` / `--lang fr`).
 
 ## Features
 
@@ -46,10 +47,12 @@ bundled (`--lang de`).
 - 🌈 **Gradient celebration** — a rainbow confetti + EUREKA banner for the aha moment.
 - 🎬 **`demo` command** — an animated tour of every effect.
 - 📈 **Stats & history** — per-session history and aggregate metrics with an animated bar chart.
-- 🌍 **Internationalized** — English by default, German included; pick with
-  `--lang`, `config.yaml`, or `RUBBERDUCK_LANG`.
+- 🌍 **Internationalized** — English by default, German and French included; pick
+  with `--lang`, `config.yaml`, or `RUBBERDUCK_LANG`. Adding a language is one
+  `Catalog` literal the compiler checks for completeness.
 - 💬 **Interactive question dialog** — step by step through your problem.
-- 🎨 **Themes & colours** — `classic`, `midnight`, `mono`; honours `NO_COLOR`.
+- 🎨 **Themes & colours** — `classic`, `midnight`, `mono`, `ocean`, `forest`,
+  `candy`; honours `NO_COLOR`.
 - 🧭 **Topic selection** — interactive picker or `--topic` directly.
 - 💡 **Aha moment** — type `!aha` when you find the bug: a celebration animation
   and a marker in the log.
@@ -148,7 +151,7 @@ A `brew tap` is **planned/optional** and not available yet.
 | ---------------------------------- | ------------------------------------------------- |
 | `rubberduck`                       | start a session (topic picker if no `--topic`)    |
 | `rubberduck --topic logic`         | a question set directly (`default`/`logic`/`perf`/`api`) |
-| `rubberduck --lang de`             | switch the language (`en` / `de`)                 |
+| `rubberduck --lang de`             | switch the language (`en` / `de` / `fr`)          |
 | `rubberduck --log`                 | save the session as Markdown                      |
 | `rubberduck --quiet`               | no duck/animation, just concise text              |
 | `rubberduck --no-anim`             | static duck (no typewriter/swim)                  |
@@ -168,18 +171,25 @@ A `brew tap` is **planned/optional** and not available yet.
 
 ## Languages (i18n)
 
-English is the default. German is bundled. The language is resolved as:
+English is the default. German and French are bundled. The language is resolved
+as:
 
 **`--lang` flag › `RUBBERDUCK_LANG` env › `config.yaml` › English.**
 
 ```sh
-rubberduck --lang de             # German for this run
-RUBBERDUCK_LANG=de rubberduck    # via environment
+rubberduck --lang fr             # French for this run
+RUBBERDUCK_LANG=de rubberduck    # German via environment
 ```
 
-To make it permanent, set `language: de` in `config.yaml` (see below). Each
+To make it permanent, set `language: fr` in `config.yaml` (see below). Each
 language has its own question pool file, so you can curate questions per
 language.
+
+Internally every user-facing string lives in a per-language `Catalog` (one data
+struct, one `const` per language); the `Tr` translator is a thin, `Copy`
+accessor over the active catalog. Because a struct literal must set every field,
+**adding a language can never silently forget a message** — the compiler refuses
+to build until the new catalog is complete.
 
 ## The aha moment
 
@@ -259,12 +269,12 @@ win. Manage it with `rubberduck config init|show|path|set|reset`, e.g.
 
 ```yaml
 color: auto          # auto | always | never
-theme: classic       # classic | midnight | mono
+theme: classic       # classic | midnight | mono | ocean | forest | candy
 animations: true
 speed: normal        # slow | normal | fast
 typewriter: true
 default_topic: default
-language: en          # en | de
+language: en          # en | de | fr
 history: true         # record sessions for `stats`
 ```
 
@@ -355,7 +365,7 @@ tests against an in-memory buffer instead of a real terminal.
 | Logs / data      | `~/.rubberduck/`                           | `session-<date>.md`, `history.jsonl` |
 | Config override  | `$RUBBERDUCK_CONFIG_DIR`                   | overrides config path |
 | Data override    | `$RUBBERDUCK_DATA_DIR`                     | overrides data path |
-| Language override | `$RUBBERDUCK_LANG`                        | `en` / `de`         |
+| Language override | `$RUBBERDUCK_LANG`                        | `en` / `de` / `fr`  |
 
 > The paths are laid out the same on every platform. On Windows `~` stands for
 > `%USERPROFILE%`.
@@ -365,9 +375,12 @@ tests against an in-memory buffer instead of a real terminal.
 GitHub Actions cover the project end to end:
 
 - **CI** (`ci.yml`): `cargo fmt`, `clippy -D warnings`, `cargo doc -D warnings`,
-  tests on Linux/macOS/Windows, an MSRV check (Rust 1.87), `shellcheck`, and a
-  CLI smoke test that runs the built binary.
+  tests on Linux/macOS/Windows, an MSRV check (Rust 1.87), `shellcheck`,
+  `actionlint` (lints the workflows themselves and their inline shell), and a
+  CLI smoke test that runs the built binary in English, German and French.
 - **Audit** (`audit.yml`): weekly `cargo audit` against the RustSec database.
+- **Docs** (`docs.yml`): builds the rustdoc with `-D warnings` and publishes it
+  to GitHub Pages on every push to `main`.
 - **Release** (`release.yml`): builds the six targets and attaches the archives,
   shell completions, a man page and `SHA256SUMS`; attests SLSA build provenance
   and writes release notes — all triggered by a `vX.Y.Z` tag.
@@ -377,7 +390,7 @@ GitHub Actions cover the project end to end:
 
 - Signature verification (ed25519) for `rubberduck self update`
 - Homebrew tap
-- More duck moods, themes and languages
+- More languages (the catalog makes each new one a single data struct)
 
 ## License
 
