@@ -1,9 +1,8 @@
 //! Application orchestration: topic selection, the question dialog, the aha
 //! moment and the summary.
 //!
-//! [`App`] is the controller: it wires [`Ui`](crate::ui::Ui),
-//! [`QuestionPool`](crate::questions::QuestionPool) and the
-//! [`Transcript`](crate::session::Transcript) into one session.
+//! [`App`] is the controller: it wires [`Ui`], [`QuestionPool`] and the
+//! [`Transcript`] into one session.
 
 use crate::i18n::Tr;
 use crate::questions::{QuestionPool, Topic, DEFAULT_TOPIC};

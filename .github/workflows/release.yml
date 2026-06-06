@@ -22,8 +22,9 @@ on:
       - "v*.*.*" # z. B. v0.1.0
   workflow_dispatch: {} # manuelle Ausführung erlaubt
 
+# Minimal default; the release job widens this to exactly what it needs.
 permissions:
-  contents: write # benötigt, um ein GitHub Release zu erstellen / Assets hochzuladen
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -164,18 +165,39 @@ jobs:
     # Nur für echte Tag-Pushes veröffentlichen. Bei manuellem workflow_dispatch von
     # einem Branch wäre github.ref_name ein Branchname -> kein (Fehl-)Release.
     if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write # create the release / upload assets
+      id-token: write # OIDC token for build provenance
+      attestations: write # write the provenance attestation
     steps:
-      # Alle Build-Artifacts in ./dist sammeln; merge-multiple legt die Dateien
-      # flach (ohne Unterordner pro Artifact-Name) ab.
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Collect all build artifacts into ./dist (flat, no per-artifact subdirs).
       - name: Download all archives
         uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
 
-      # SHA256SUMS über alle Archive erzeugen. Format ist exakt das von
-      # sha256sum: "<64-hex>␠␠<dateiname>". Wir wechseln nach dist und nutzen
-      # `*`, damit die Dateinamen in SHA256SUMS ohne Pfad-Präfix stehen.
+      # Generate shell completions and a man page from a freshly built binary so
+      # they ship as release assets alongside the archives.
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install OpenSSL headers
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
+      - name: Build native binary
+        run: cargo build --release --locked
+      - name: Generate completions and man page
+        run: |
+          set -euo pipefail
+          bin=target/release/rubberduck
+          for sh in bash zsh fish powershell elvish; do
+            "$bin" completions "$sh" > "dist/rubberduck.$sh"
+          done
+          "$bin" man > dist/rubberduck.1
+
+      # One SHA256SUMS over EVERYTHING in dist (archives + completions + man).
       - name: Generate SHA256SUMS
         run: |
           set -euo pipefail
@@ -184,16 +206,29 @@ jobs:
           echo "----- SHA256SUMS -----"
           cat SHA256SUMS
 
-      # GitHub Release erstellen und alle Archive + SHA256SUMS anhängen.
-      # Release-Name = Tag (z. B. v0.1.0). Bei workflow_dispatch existiert kein
-      # Tag-Kontext für den Release-Namen; dann nutzt die Action das gepushte Ref.
+      # Supply-chain provenance (SLSA) for the release archives.
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: |
+            dist/rubberduck-*.tar.gz
+            dist/rubberduck-*.zip
+
+      # Create the release with all assets and auto-generated notes.
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
             dist/rubberduck-*.tar.gz
             dist/rubberduck-*.zip
+            dist/rubberduck.bash
+            dist/rubberduck.zsh
+            dist/rubberduck.fish
+            dist/rubberduck.powershell
+            dist/rubberduck.elvish
+            dist/rubberduck.1
             dist/SHA256SUMS

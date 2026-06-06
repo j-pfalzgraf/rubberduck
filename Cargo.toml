@@ -2,6 +2,7 @@
 name = "rubberduck-cli"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.87"
 description = "Ein offline Rubber-Duck-Debugging-Begleiter fürs Terminal – eine ASCII-Ente stellt strukturierte Rückfragen, bis der Bug gefunden ist."
 license = "MIT"
 repository = "https://github.com/j-pfalzgraf/rubberduck"

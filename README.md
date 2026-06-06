@@ -15,6 +15,7 @@
  (___/
 ```
 
+![CI](https://github.com/j-pfalzgraf/rubberduck/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Version](https://img.shields.io/badge/version-0.1.0-green)
 
@@ -137,6 +138,9 @@ A `brew tap` is **planned/optional** and not available yet.
 - `rubberduck self update` downloads the release over **HTTPS/TLS** from GitHub;
   signature verification for `self update` is planned (see "Planned").
 - As always with `curl | sh`: **read the script first** before running it.
+- Release archives carry **SLSA build provenance** (verify with
+  `gh attestation verify <archive> --repo j-pfalzgraf/rubberduck`); each release
+  also ships shell completions and a man page as assets.
 
 ## Usage
 
@@ -355,6 +359,19 @@ tests against an in-memory buffer instead of a real terminal.
 
 > The paths are laid out the same on every platform. On Windows `~` stands for
 > `%USERPROFILE%`.
+
+## Continuous integration
+
+GitHub Actions cover the project end to end:
+
+- **CI** (`ci.yml`): `cargo fmt`, `clippy -D warnings`, `cargo doc -D warnings`,
+  tests on Linux/macOS/Windows, an MSRV check (Rust 1.87), `shellcheck`, and a
+  CLI smoke test that runs the built binary.
+- **Audit** (`audit.yml`): weekly `cargo audit` against the RustSec database.
+- **Release** (`release.yml`): builds the six targets and attaches the archives,
+  shell completions, a man page and `SHA256SUMS`; attests SLSA build provenance
+  and writes release notes — all triggered by a `vX.Y.Z` tag.
+- **Dependabot** keeps Cargo and Actions dependencies current.
 
 ## Planned
 
