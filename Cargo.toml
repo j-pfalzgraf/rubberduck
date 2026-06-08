@@ -2,7 +2,7 @@
 name = "rubberduck-cli"
 version = "1.0.0"
 edition = "2021"
-rust-version = "1.87"
+rust-version = "1.88"
 description = "An offline rubber-duck-debugging companion for your terminal — an animated ASCII duck asks structured questions until you find the bug yourself."
 license = "MIT"
 repository = "https://github.com/j-pfalzgraf/rubberduck"

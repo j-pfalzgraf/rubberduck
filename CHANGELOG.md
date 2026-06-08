@@ -113,12 +113,10 @@ describes the full feature set as shipped.
 #### CI
 
 - CI workflow: `cargo fmt`, `clippy -D warnings`, `cargo doc -D warnings`, tests
-  on Linux/macOS/Windows, an MSRV check (Rust 1.87), `shellcheck`, `actionlint`,
+  on Linux/macOS/Windows, an MSRV check (Rust 1.88), `shellcheck`, `actionlint`,
   a `cargo publish --dry-run`, and a CLI smoke test running the built binary in
   English, German and French.
 - Audit workflow: weekly `cargo audit` against the RustSec database.
-- Docs workflow: builds rustdoc with `-D warnings` and publishes to GitHub Pages
-  on every push to `main`.
 - Release workflow: builds six targets and attaches archives, shell completions,
   a man page and `SHA256SUMS`, attests SLSA build provenance and writes release
   notes, triggered by a `vX.Y.Z` tag.

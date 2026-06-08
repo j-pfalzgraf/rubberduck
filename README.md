@@ -16,7 +16,6 @@
 ```
 
 ![CI](https://github.com/j-pfalzgraf/rubberduck/actions/workflows/ci.yml/badge.svg)
-![Docs](https://github.com/j-pfalzgraf/rubberduck/actions/workflows/docs.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![Version](https://img.shields.io/badge/version-1.0.0-green)
 
@@ -376,13 +375,11 @@ tests against an in-memory buffer instead of a real terminal.
 GitHub Actions cover the project end to end:
 
 - **CI** (`ci.yml`): `cargo fmt`, `clippy -D warnings`, `cargo doc -D warnings`,
-  tests on Linux/macOS/Windows, an MSRV check (Rust 1.87), `shellcheck`,
+  tests on Linux/macOS/Windows, an MSRV check (Rust 1.88), `shellcheck`,
   `actionlint` (lints the workflows themselves and their inline shell), a
   `cargo publish --dry-run` so the `cargo install` path can't silently break,
   and a CLI smoke test that runs the built binary in English, German and French.
 - **Audit** (`audit.yml`): weekly `cargo audit` against the RustSec database.
-- **Docs** (`docs.yml`): builds the rustdoc with `-D warnings` and publishes it
-  to GitHub Pages on every push to `main`.
 - **Release** (`release.yml`): builds the six targets and attaches the archives,
   shell completions, a man page and `SHA256SUMS`; attests SLSA build provenance
   and writes release notes — all triggered by a `vX.Y.Z` tag.
