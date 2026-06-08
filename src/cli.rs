@@ -55,7 +55,7 @@ pub struct Cli {
     #[arg(long, value_enum, global = true)]
     pub color: Option<ColorPref>,
 
-    /// Colour scheme (classic, midnight, mono).
+    /// Colour scheme (classic, midnight, mono, ocean, forest, candy).
     #[arg(
         long,
         global = true,
@@ -63,7 +63,7 @@ pub struct Cli {
     )]
     pub theme: Option<String>,
 
-    /// User-interface language (en, de).
+    /// User-interface language (en, de, fr).
     #[arg(long, value_enum, global = true)]
     pub lang: Option<Lang>,
 

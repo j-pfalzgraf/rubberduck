@@ -11,6 +11,7 @@ use std::time::Duration;
 
 /// Mood or pose of the duck.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum Mood {
     /// Neutral, calm.
     Idle,

@@ -14,7 +14,7 @@
     (no mandatory parameters).
 
     Version selection (in order of precedence):
-        1. -Version parameter (e.g. -Version v0.1.0)
+        1. -Version parameter (e.g. -Version v1.0.0)
         2. $env:VERSION environment variable
         3. default: latest
 
@@ -28,7 +28,7 @@
 
 [CmdletBinding()]
 param(
-    # Release version/tag to install, e.g. "v0.1.0" or "0.1.0". Defaults to latest.
+    # Release version/tag to install, e.g. "v1.0.0" or "1.0.0". Defaults to latest.
     [string]$Version
 )
 
@@ -87,7 +87,7 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
     $resolvedVersion = 'latest'
     $downloadBase = "$BaseUrl/releases/latest/download"
 } else {
-    # pinned tag: accept "0.1.0" or "v0.1.0" and normalize to a "vX.Y.Z" tag.
+    # pinned tag: accept "1.0.0" or "v1.0.0" and normalize to a "vX.Y.Z" tag.
     $tag = $Version
     if ($tag -notmatch '^v') {
         $tag = "v$tag"

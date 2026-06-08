@@ -18,7 +18,7 @@
 ![CI](https://github.com/j-pfalzgraf/rubberduck/actions/workflows/ci.yml/badge.svg)
 ![Docs](https://github.com/j-pfalzgraf/rubberduck/actions/workflows/docs.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
-![Version](https://img.shields.io/badge/version-0.1.0-green)
+![Version](https://img.shields.io/badge/version-1.0.0-green)
 
 > The badges are generic [shields.io](https://shields.io) placeholders.
 >
@@ -147,27 +147,27 @@ A `brew tap` is **planned/optional** and not available yet.
 
 ## Usage
 
-| Command                            | Description                                       |
-| ---------------------------------- | ------------------------------------------------- |
-| `rubberduck`                       | start a session (topic picker if no `--topic`)    |
-| `rubberduck --topic logic`         | a question set directly (`default`/`logic`/`perf`/`api`) |
-| `rubberduck --lang de`             | switch the language (`en` / `de` / `fr`)          |
-| `rubberduck --log`                 | save the session as Markdown                      |
-| `rubberduck --quiet`               | no duck/animation, just concise text              |
-| `rubberduck --no-anim`             | static duck (no typewriter/swim)                  |
-| `rubberduck --speed fast`          | animation speed (`slow`/`normal`/`fast`)          |
-| `rubberduck --color never`         | force/disable colour (`auto`/`always`/`never`)    |
-| `rubberduck --theme ocean`         | colour scheme (6 themes — see Appearance)         |
-| `rubberduck topics`                | show the available topics with descriptions       |
-| `rubberduck languages`             | list the interface languages                      |
-| `rubberduck demo`                  | play an animated demo of every effect             |
+| Command                              | Description                                              |
+| ------------------------------------ | -------------------------------------------------------- |
+| `rubberduck`                         | start a session (topic picker if no `--topic`)           |
+| `rubberduck --topic logic`           | a question set directly (`default`/`logic`/`perf`/`api`) |
+| `rubberduck --lang de`               | switch the language (`en` / `de` / `fr`)                 |
+| `rubberduck --log`                   | save the session as Markdown                             |
+| `rubberduck --quiet`                 | no duck/animation, just concise text                     |
+| `rubberduck --no-anim`               | static duck (no typewriter/swim)                         |
+| `rubberduck --speed fast`            | animation speed (`slow`/`normal`/`fast`)                 |
+| `rubberduck --color never`           | force/disable colour (`auto`/`always`/`never`)           |
+| `rubberduck --theme ocean`           | colour scheme (6 themes — see Appearance)                |
+| `rubberduck topics`                  | show the available topics with descriptions              |
+| `rubberduck languages`               | list the interface languages                             |
+| `rubberduck demo`                    | play an animated demo of every effect                    |
 | `rubberduck stats [--reset\|--json]` | aggregate stats (`--json` for scripts, `--reset` clears) |
-| `rubberduck completions zsh`       | print shell completions                           |
-| `rubberduck man`                   | print a man page (roff)                           |
-| `rubberduck config show`           | manage settings (`init`/`show`/`path`/`set`/`reset`) |
-| `rubberduck --version`             | print the version                                 |
-| `rubberduck self update [--check]` | update (`--check`: check only)                    |
-| `rubberduck self uninstall`        | remove rubberduck along with config and logs      |
+| `rubberduck completions zsh`         | print shell completions                                  |
+| `rubberduck man`                     | print a man page (roff)                                  |
+| `rubberduck config show`             | manage settings (`init`/`show`/`path`/`set`/`reset`)     |
+| `rubberduck --version`               | print the version                                        |
+| `rubberduck self update [--check]`   | update (`--check`: check only)                           |
+| `rubberduck self uninstall`          | remove rubberduck along with config and logs             |
 
 ## Languages (i18n)
 
@@ -339,34 +339,34 @@ The binary is then at `target/release/rubberduck` (Windows: `.exe`).
 
 Clearly separated layers, trait-based and testable:
 
-| Module        | Responsibility                                                    |
-| ------------- | ----------------------------------------------------------------- |
-| `i18n`        | languages (`Lang`) and the `Tr` translator (all user strings)     |
-| `ui::theme`   | colour schemes + `Styler` (colour on/off, `NO_COLOR`)             |
-| `ui::surface` | `Surface` trait: `TermSurface` (crossterm) / `BufferSurface` (tests) |
-| `ui::animate` | `Animation` trait, `Player`, `Frame`, `Easing`                    |
-| `ui::duck`    | DRY pose builder + swim/quack/celebrate animations                |
-| `ui::scene`   | `SpeechScene`: typewriter speech bubble over a live duck          |
-| `ui::gradient`| RGB gradients for the banner, confetti and charts                 |
-| `ui` (`Ui`)   | facade: resolves TTY/colour, degrades cleanly                     |
-| `app`         | controller: topic selection, question dialog, aha                 |
-| `demo` / `stats` / `history` | the demo tour, the stats view, session history    |
-| `questions` / `session` / `config` | data and state layer                         |
-| `cli` / `selfcmd` / `paths` / `util` | arguments, update/uninstall, paths, helpers |
+| Module                               | Responsibility                                                       |
+| ------------------------------------ | -------------------------------------------------------------------- |
+| `i18n`                               | languages (`Lang`) and the `Tr` translator (all user strings)        |
+| `ui::theme`                          | colour schemes + `Styler` (colour on/off, `NO_COLOR`)                |
+| `ui::surface`                        | `Surface` trait: `TermSurface` (crossterm) / `BufferSurface` (tests) |
+| `ui::animate`                        | `Animation` trait, `Player`, `Frame`, `Easing`                       |
+| `ui::duck`                           | DRY pose builder + swim/quack/celebrate animations                   |
+| `ui::scene`                          | `SpeechScene`: typewriter speech bubble over a live duck             |
+| `ui::gradient`                       | RGB gradients for the banner, confetti and charts                    |
+| `ui` (`Ui`)                          | facade: resolves TTY/colour, degrades cleanly                        |
+| `app`                                | controller: topic selection, question dialog, aha                    |
+| `demo` / `stats` / `history`         | the demo tour, the stats view, session history                       |
+| `questions` / `session` / `config`   | data and state layer                                                 |
+| `cli` / `selfcmd` / `paths` / `util` | arguments, update/uninstall, paths, helpers                          |
 
 The animation engine only knows the `Surface` trait — which is why it runs in
 tests against an in-memory buffer instead of a real terminal.
 
 ## Configuration & data locations
 
-| Purpose          | Path                                       | Contents            |
-| ---------------- | ------------------------------------------ | ------------------- |
-| Questions        | `~/.config/rubberduck/questions.<lang>.yaml` | topics & questions  |
-| Settings         | `~/.config/rubberduck/config.yaml`         | theme, speed, lang … |
-| Logs / data      | `~/.rubberduck/`                           | `session-<date>.md`, `history.jsonl` |
-| Config override  | `$RUBBERDUCK_CONFIG_DIR`                   | overrides config path |
-| Data override    | `$RUBBERDUCK_DATA_DIR`                     | overrides data path |
-| Language override | `$RUBBERDUCK_LANG`                        | `en` / `de` / `fr`  |
+| Purpose           | Path                                         | Contents                             |
+| ----------------- | -------------------------------------------- | ------------------------------------ |
+| Questions         | `~/.config/rubberduck/questions.<lang>.yaml` | topics & questions                   |
+| Settings          | `~/.config/rubberduck/config.yaml`           | theme, speed, lang …                 |
+| Logs / data       | `~/.rubberduck/`                             | `session-<date>.md`, `history.jsonl` |
+| Config override   | `$RUBBERDUCK_CONFIG_DIR`                     | overrides config path                |
+| Data override     | `$RUBBERDUCK_DATA_DIR`                       | overrides data path                  |
+| Language override | `$RUBBERDUCK_LANG`                           | `en` / `de` / `fr`                   |
 
 > The paths are laid out the same on every platform. On Windows `~` stands for
 > `%USERPROFILE%`.

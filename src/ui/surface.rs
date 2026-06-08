@@ -1,8 +1,8 @@
 //! Abstraction over the terminal so that animations stay testable.
 //!
 //! The [`crate::ui::animate::Player`] only talks to this [`Surface`] trait.
-//! In production, [`TermSurface`] writes to stdout via crossterm; in tests
-//! [`BufferSurface`] collects the output in memory.
+//! In production, [`TermSurface`] writes to stdout via crossterm; in tests an
+//! in-crate `BufferSurface` collects the output in memory.
 
 use std::io::{self, Write};
 
@@ -102,17 +102,22 @@ impl<W: Write> Surface for TermSurface<W> {
 
 /// Collects all text output in memory – for tests. Cursor/clear operations
 /// are no-ops.
+///
+/// Gated behind `#[cfg(test)]`: this is purely an internal test helper, so it is
+/// not part of the public API and is not compiled into release builds.
+#[cfg(test)]
 #[derive(Debug, Default)]
-pub struct BufferSurface {
+pub(crate) struct BufferSurface {
     /// The collected (written) output.
-    pub out: String,
+    pub(crate) out: String,
     width: u16,
 }
 
+#[cfg(test)]
 impl BufferSurface {
     /// New buffer with width `width`.
     #[must_use]
-    pub fn new(width: u16) -> Self {
+    pub(crate) fn new(width: u16) -> Self {
         Self {
             out: String::new(),
             width,
@@ -120,6 +125,7 @@ impl BufferSurface {
     }
 }
 
+#[cfg(test)]
 impl Surface for BufferSurface {
     fn write_str(&mut self, s: &str) -> io::Result<()> {
         self.out.push_str(s);

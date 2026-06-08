@@ -36,6 +36,7 @@ use std::fmt;
     clap::ValueEnum,
     Default,
 )]
+#[non_exhaustive]
 pub enum Lang {
     /// English (default).
     #[default]

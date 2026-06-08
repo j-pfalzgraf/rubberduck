@@ -15,7 +15,8 @@
 //! ```
 //!
 //! Each language has its own bundled default file (`questions.en.yaml`,
-//! `questions.de.yaml`) and its own user file (`<config>/questions.<code>.yaml`).
+//! `questions.de.yaml`, `questions.fr.yaml`) and its own user file
+//! (`<config>/questions.<code>.yaml`).
 
 use crate::i18n::Lang;
 use crate::paths;

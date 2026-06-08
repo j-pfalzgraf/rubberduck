@@ -1,26 +1,26 @@
-# Release-Workflow für rubberduck.
+# Release workflow for rubberduck.
 #
-# Triggert beim Pushen eines Tags `vX.Y.Z`, baut die Release-Binaries für alle
-# 6 Targets aus dem Asset-Naming-Contract, paketiert sie exakt nach dem Vertrag
-# (rubberduck-<TARGET>.tar.gz bzw. .zip), erzeugt eine einzelne SHA256SUMS-Datei
-# und veröffentlicht ein GitHub Release mit allen Assets.
+# Triggered by pushing a `vX.Y.Z` tag; builds the release binaries for all 6
+# targets from the asset-naming contract, packages them exactly per the contract
+# (rubberduck-<TARGET>.tar.gz or .zip), generates a single SHA256SUMS file and
+# publishes a GitHub release with all assets.
 #
-# WICHTIG: Die Asset-Dateinamen MÜSSEN exakt `rubberduck-<TARGET>.(tar.gz|zip)`
-# heißen und die Prüfsummendatei exakt `SHA256SUMS`. Install-Skripte, CI und der
-# eingebaute `rubberduck self update` verlassen sich auf diese Namen.
+# IMPORTANT: the asset file names MUST be exactly `rubberduck-<TARGET>.(tar.gz|zip)`
+# and the checksum file exactly `SHA256SUMS`. The install scripts, CI and the
+# built-in `rubberduck self update` all rely on these names.
 #
-# HINWEIS (Platzhalter): Dieses Repo geht von owner/repo = "j-pfalzgraf/rubberduck"
-# aus. Wenn ihr forkt, müsst ihr nur den Repo-Namen ändern (der Workflow nutzt
-# automatisch ${{ github.repository }} bzw. das gepushte Tag) – an dieser Datei
-# sind dafür keine Anpassungen nötig.
+# NOTE (placeholder): this repo assumes owner/repo = "j-pfalzgraf/rubberduck".
+# When you fork, you only need to change the repo name (the workflow uses
+# ${{ github.repository }} and the pushed tag automatically) – no edits to this
+# file are required for that.
 
 name: Release
 
 on:
   push:
     tags:
-      - "v*.*.*" # z. B. v0.1.0
-  workflow_dispatch: {} # manuelle Ausführung erlaubt
+      - "v*.*.*" # e.g. v1.0.0
+  workflow_dispatch: {} # manual runs allowed
 
 # Minimal default; the release job widens this to exactly what it needs.
 permissions:
@@ -31,8 +31,8 @@ env:
 
 jobs:
   # -------------------------------------------------------------------------
-  # 1) Build-Matrix: ein Job pro Target, packt sein Archiv und lädt es als
-  #    Artifact hoch. Der Release-Job zieht die Artifacts danach wieder herunter.
+  # 1) Build matrix: one job per target; packs its archive and uploads it as an
+  #    artifact. The release job downloads the artifacts again afterwards.
   # -------------------------------------------------------------------------
   build:
     name: Build ${{ matrix.target }}
@@ -41,40 +41,40 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # native-tls braucht OpenSSL NUR unter Linux; macOS nutzt Secure
-          # Transport, Windows SChannel. Daher wird `vendored-openssl` (für
-          # portable Binaries + Cross-Build) ausschließlich für Linux gesetzt.
-          # --- Linux (x86_64): nativer Build, vendored OpenSSL ---
+          # native-tls needs OpenSSL ONLY on Linux; macOS uses Secure Transport,
+          # Windows SChannel. So `vendored-openssl` (for portable binaries +
+          # cross-build) is set for Linux only.
+          # --- Linux (x86_64): native build, vendored OpenSSL ---
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             archive: tar.gz
             cross: false
             features: "--features vendored-openssl"
-          # --- Linux (aarch64): Cross via gcc-aarch64-linux-gnu, vendored OpenSSL ---
+          # --- Linux (aarch64): cross via gcc-aarch64-linux-gnu, vendored OpenSSL ---
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-latest
             archive: tar.gz
             cross: true
             features: "--features vendored-openssl"
-          # --- macOS (x86_64): Cross auf Apple-Silicon-Runner, Secure Transport ---
+          # --- macOS (x86_64): cross on an Apple-Silicon runner, Secure Transport ---
           - target: x86_64-apple-darwin
             os: macos-latest
             archive: tar.gz
             cross: false
             features: ""
-          # --- macOS (aarch64): nativer Build, Secure Transport ---
+          # --- macOS (aarch64): native build, Secure Transport ---
           - target: aarch64-apple-darwin
             os: macos-latest
             archive: tar.gz
             cross: false
             features: ""
-          # --- Windows (x86_64): nativer Build, SChannel ---
+          # --- Windows (x86_64): native build, SChannel ---
           - target: x86_64-pc-windows-msvc
             os: windows-latest
             archive: zip
             cross: false
             features: ""
-          # --- Windows (aarch64): Cross vom x64-Runner, SChannel ---
+          # --- Windows (aarch64): cross from the x64 runner, SChannel ---
           - target: aarch64-pc-windows-msvc
             os: windows-latest
             archive: zip
@@ -85,30 +85,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      # Rust-Toolchain via rustup; das gewünschte Target wird hinzugefügt.
+      # Rust toolchain via rustup; the desired target is added.
       - name: Install Rust toolchain and target
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
 
-      # Cargo-Build-Cache (key enthält das Target, damit pro Target getrennt gecacht wird).
+      # Cargo build cache (the key includes the target so each target caches separately).
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.target }}
 
-      # Cross-C-Compiler für aarch64-Linux. Wird gebraucht, weil
-      # `--features vendored-openssl` OpenSSL aus dem Quellcode baut und linkt;
-      # dafür ist ein aarch64-tauglicher C-Compiler nötig.
+      # Cross C compiler for aarch64 Linux. Needed because
+      # `--features vendored-openssl` builds and links OpenSSL from source, which
+      # requires an aarch64-capable C compiler.
       - name: Install aarch64 cross toolchain (linux only)
         if: matrix.cross == true
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu
 
-      # Cargo-Env für den aarch64-Linux-Cross-Build:
-      #  - CARGO_TARGET_..._LINKER: Linker für das Target-Binary.
-      #  - CC_aarch64_unknown_linux_gnu: C-Compiler, den openssl-src zum Bauen von OpenSSL nutzt.
+      # Cargo env for the aarch64 Linux cross build:
+      #  - CARGO_TARGET_..._LINKER: linker for the target binary.
+      #  - CC_aarch64_unknown_linux_gnu: C compiler that openssl-src uses to build OpenSSL.
       - name: Configure cross env (linux aarch64)
         if: matrix.cross == true
         shell: bash
@@ -116,13 +116,13 @@ jobs:
           echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> "$GITHUB_ENV"
           echo "CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc" >> "$GITHUB_ENV"
 
-      # Release-Build. `--locked` erzwingt das committete Cargo.lock. Nur die
-      # Linux-Targets setzen `${{ matrix.features }}` = `--features vendored-openssl`
-      # (statisches OpenSSL); macOS/Windows bauen ohne OpenSSL.
+      # Release build. `--locked` enforces the committed Cargo.lock. Only the
+      # Linux targets set `${{ matrix.features }}` = `--features vendored-openssl`
+      # (static OpenSSL); macOS/Windows build without OpenSSL.
       - name: Build release binary
         run: cargo build --release --locked --target ${{ matrix.target }} ${{ matrix.features }}
 
-      # --- Paketieren: Unix -> tar.gz mit Binär `rubberduck` im Archiv-Root ---
+      # --- Package: Unix -> tar.gz with the `rubberduck` binary at the archive root ---
       - name: Package (unix tar.gz)
         if: matrix.archive == 'tar.gz'
         shell: bash
@@ -133,7 +133,7 @@ jobs:
           tar -czf "$asset" -C "$bindir" rubberduck
           echo "ASSET=$asset" >> "$GITHUB_ENV"
 
-      # --- Paketieren: Windows -> zip mit `rubberduck.exe` im Archiv-Root ---
+      # --- Package: Windows -> zip with `rubberduck.exe` at the archive root ---
       - name: Package (windows zip)
         if: matrix.archive == 'zip'
         shell: pwsh
@@ -144,8 +144,8 @@ jobs:
           Compress-Archive -Path (Join-Path $bindir "rubberduck.exe") -DestinationPath $asset -Force
           "ASSET=$asset" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
-      # Archiv als Artifact hochladen, damit der Release-Job es einsammeln kann.
-      # Ein Artifact pro Target (Name = Asset-Dateiname).
+      # Upload the archive as an artifact so the release job can collect it.
+      # One artifact per target (name = asset file name).
       - name: Upload archive artifact
         uses: actions/upload-artifact@v7
         with:
@@ -155,15 +155,15 @@ jobs:
           retention-days: 7
 
   # -------------------------------------------------------------------------
-  # 2) Release-Job: lädt alle Archive herunter, erzeugt EINE SHA256SUMS-Datei
-  #    über alle Archive und erstellt das GitHub Release mit allen Assets.
+  # 2) Release job: downloads all archives, generates ONE SHA256SUMS file over
+  #    every archive and creates the GitHub release with all assets.
   # -------------------------------------------------------------------------
   release:
     name: Publish release
     needs: build
     runs-on: ubuntu-latest
-    # Nur für echte Tag-Pushes veröffentlichen. Bei manuellem workflow_dispatch von
-    # einem Branch wäre github.ref_name ein Branchname -> kein (Fehl-)Release.
+    # Only publish for real tag pushes. On a manual workflow_dispatch from a
+    # branch, github.ref_name would be a branch name -> no (accidental) release.
     if: startsWith(github.ref, 'refs/tags/')
     permissions:
       contents: write # create the release / upload assets

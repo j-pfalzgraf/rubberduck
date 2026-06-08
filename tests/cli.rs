@@ -16,11 +16,13 @@ fn duck(home: &std::path::Path) -> Command {
 #[test]
 fn prints_version() {
     let tmp = tempfile::tempdir().unwrap();
+    // Assert against the compile-time crate version so this never needs a manual
+    // bump on a release (the test crate shares the package's CARGO_PKG_VERSION).
     duck(tmp.path())
         .arg("--version")
         .assert()
         .success()
-        .stdout(contains("0.1.0"));
+        .stdout(contains(env!("CARGO_PKG_VERSION")));
 }
 
 #[test]

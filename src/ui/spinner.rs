@@ -11,6 +11,7 @@ use std::time::Duration;
 /// (except [`SpinnerStyle::Moon`], whose emoji are two cells wide — still safe,
 /// because the spinner renders on its own line).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
 pub enum SpinnerStyle {
     /// Rotating Braille dots (the default).
     Braille,
