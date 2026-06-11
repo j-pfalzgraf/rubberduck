@@ -15,15 +15,14 @@
 //! ```
 //!
 //! Each language has its own bundled default file (`questions.en.yaml`,
-//! `questions.de.yaml`, `questions.fr.yaml`) and its own user file
-//! (`<config>/questions.<code>.yaml`).
+//! `questions.de.yaml`, `questions.fr.yaml`, `questions.es.yaml`) and its own
+//! user file (`<config>/questions.<code>.yaml`).
 
 use crate::i18n::Lang;
 use crate::paths;
 use anyhow::{anyhow, Context, Result};
 use serde::Deserialize;
 use std::collections::BTreeMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 /// Name of the default topic (stable across languages).
@@ -145,6 +144,7 @@ pub fn embedded_yaml(lang: Lang) -> &'static str {
         Lang::English => include_str!("../questions.en.yaml"),
         Lang::German => include_str!("../questions.de.yaml"),
         Lang::French => include_str!("../questions.fr.yaml"),
+        Lang::Spanish => include_str!("../questions.es.yaml"),
     }
 }
 
@@ -165,17 +165,7 @@ pub fn load_or_init(lang: Lang) -> Result<QuestionPool> {
 
 /// Like [`load_or_init`], but with an explicit path (for tests).
 fn load_or_init_at(path: &Path, lang: Lang) -> Result<QuestionPool> {
-    if !path.exists() {
-        if let Some(dir) = path.parent() {
-            fs::create_dir_all(dir)
-                .with_context(|| format!("Could not create {}", dir.display()))?;
-        }
-        fs::write(path, embedded_yaml(lang))
-            .with_context(|| format!("Could not write {}", path.display()))?;
-    }
-
-    let content =
-        fs::read_to_string(path).with_context(|| format!("Could not read {}", path.display()))?;
+    let content = paths::read_or_init(path, embedded_yaml(lang))?;
     QuestionPool::parse(&content).with_context(|| format!("Invalid YAML in {}", path.display()))
 }
 
@@ -237,7 +227,29 @@ mod tests {
     #[test]
     fn topics_are_sorted() {
         let names = embedded(Lang::English).unwrap().topic_names().join(",");
-        assert_eq!(names, "api,default,logic,perf");
+        assert_eq!(
+            names,
+            "api,build,concurrency,default,logic,memory,network,perf"
+        );
+    }
+
+    #[test]
+    fn every_language_ships_the_same_topic_set() {
+        let reference: Vec<String> = embedded(Lang::English)
+            .unwrap()
+            .topic_names()
+            .iter()
+            .map(ToString::to_string)
+            .collect();
+        for lang in Lang::ALL {
+            let names: Vec<String> = embedded(lang)
+                .unwrap()
+                .topic_names()
+                .iter()
+                .map(ToString::to_string)
+                .collect();
+            assert_eq!(names, reference, "topic set differs in {lang}");
+        }
     }
 
     #[test]

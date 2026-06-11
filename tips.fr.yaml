@@ -1,0 +1,22 @@
+# rubberduck – astuces de débogage (Français)
+#
+# Une liste simple de courtes astuces. `rubberduck tip` en affiche une au hasard ;
+# `rubberduck tips` les liste toutes. Librement éditable ; ton équipe peut la
+# partager. Créée au premier lancement dans ~/.config/rubberduck/tips.fr.yaml.
+
+tips:
+  - "Explique le problème à voix haute, ligne par ligne — c'est tout le secret."
+  - "Relis le message d'erreur, lentement. La réponse est souvent dans la première ligne."
+  - "Réduis-le : rétrécis l'entrée jusqu'à ce que le bug survive tout juste."
+  - "Vérifie tes hypothèses — affiche la seule valeur dont tu es *sûr*."
+  - "Qu'est-ce qui a changé juste avant que ça casse ? Commence tes recherches là."
+  - "Si ça n'échoue que parfois, soupçonne le timing, l'ordre, ou un état partagé."
+  - "Reproduis-le de façon fiable avant d'essayer de le corriger."
+  - "Change une seule chose à la fois. Deux changements masquent leurs effets respectifs."
+  - "Fais le coup du canard en plastique : un auditeur qui se contente de hocher la tête reste un auditeur."
+  - "Écris le cas qui échoue sous forme de test — comme ça tu sauras quand c'est réparé."
+  - "Procède par dichotomie : est-ce que ça casse encore à mi-chemin ?"
+  - "Erreur de décalage d'un (off-by-one) ? Revérifie tes < contre <=, et tes 0 contre 1."
+  - "Éloigne-toi cinq minutes. Le bug attend ; ton regard neuf, non."
+  - "Si la doc et le comportement se contredisent, fie-toi à une petite expérience."
+  - "Nomme le bug en une phrase. Si tu n'y arrives pas, c'est que tu ne le comprends pas encore."

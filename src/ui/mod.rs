@@ -5,6 +5,7 @@
 //! degrading to static or plain-text output (`--quiet`, no terminal).
 
 pub mod animate;
+pub mod bar;
 pub mod duck;
 pub mod gradient;
 pub mod scene;
@@ -183,6 +184,19 @@ impl Ui {
             } else {
                 let styler = Styler::new(Theme::by_name(name), self.styler.enabled());
                 println!("  {}", styler.duck(&format!("{name:<9} <( o)___")));
+            }
+        }
+    }
+
+    /// Prints a painted swatch of every named gradient (names only in `quiet`
+    /// mode). Drives the demo's gradient showcase.
+    pub fn gradient_previews(&self) {
+        for (name, gradient) in Gradient::showcase() {
+            if self.settings.quiet {
+                println!("  {name}");
+            } else {
+                let swatch = gradient::paint(&"█".repeat(18), &gradient, self.styler.enabled());
+                println!("  {name:<9} {swatch}");
             }
         }
     }

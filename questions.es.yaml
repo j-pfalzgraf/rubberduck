@@ -1,0 +1,106 @@
+# rubberduck – banco de preguntas (Español)
+#
+# Edita este archivo libremente: añade temas o preguntas, tu equipo puede
+# compartirlo.
+#
+# Formato: `topics` asigna un nombre de tema a un tema. Cada tema admite una de
+# dos formas:
+#   simple:                  rica:
+#     - "Pregunta 1"           description: "Texto corto para el selector"
+#     - "Pregunta 2"           questions:
+#                               - "Pregunta 1"
+#
+# El tema predeterminado se llama `default`. Llega a tus propios temas con
+# `--topic <nombre>`.
+
+topics:
+  default:
+    description: "Preguntas generales para (casi) cualquier bug."
+    questions:
+      - "¿Qué se supone que debe hacer tu código en este punto, exactamente?"
+      - "¿Qué ocurre en su lugar — concretamente?"
+      - "¿Cómo te das cuenta exactamente de que algo va mal (mensaje de error, valor incorrecto, crash)?"
+      - "¿Qué línea o función es el principal sospechoso — y por qué esa?"
+      - "¿Qué suposición estás haciendo aquí que quizá no se cumple?"
+      - "¿Qué fue lo último que cambiaste, justo antes de que apareciera el bug?"
+      - "¿Con qué entradas falla — y con cuáles funciona?"
+      - "Si imprimes el valor en cuestión justo antes de ese punto: ¿qué esperas y qué ves?"
+      - "¿Qué parte del problema podrías aislar o reducir?"
+      - "¿Cuál es lo más simple que podrías probar a continuación?"
+
+  logic:
+    description: "Bugs de lógica, bucles y condiciones."
+    questions:
+      - "¿Tus condiciones son realmente correctas (==, <, >, paréntesis, negaciones)?"
+      - "¿Hay un error off-by-one en los límites (< vs <=, índice 0 vs 1)?"
+      - "¿Qué casos extremos no has considerado aún (vacío, null, negativo, muy grande)?"
+      - "¿El bucle se ejecuta tantas veces como crees — una de más o una de menos?"
+      - "¿El orden de los pasos es correcto, o algo pasa demasiado pronto o demasiado tarde?"
+      - "¿Se está sobrescribiendo una variable, o mantiene en secreto un valor antiguo?"
+      - "Si trabajas el caso a mano sobre papel: ¿dónde diverge el programa por primera vez?"
+
+  perf:
+    description: "Código lento: tiempo de ejecución, memoria, I/O."
+    questions:
+      - "¿Qué es lento exactamente — y cómo lo sabes (una medición o una corazonada)?"
+      - "¿Mediste la parte lenta, o solo la supusiste?"
+      - "¿Qué operación se ejecuta más a menudo — hay un bucle dentro de un bucle escondido ahí?"
+      - "¿Se calcula algo repetidamente que podrías calcular una vez y recordar?"
+      - "¿Cómo crece el tiempo de ejecución cuando la entrada se duplica?"
+      - "¿Es tiempo de CPU, memoria, I/O o la red?"
+      - "¿Tu estructura de datos encaja con el patrón de acceso (lookup, inserción, ordenación)?"
+
+  api:
+    description: "APIs, llamadas e interfaces."
+    questions:
+      - "¿Qué dice la documentación que devuelve esta llamada — y qué hace en realidad?"
+      - "¿El orden, los tipos y las unidades de los argumentos son correctos?"
+      - "¿Qué status code o respuesta de error obtienes exactamente?"
+      - "¿Manejas el caso de error de la respuesta, o solo el caso de éxito?"
+      - "¿La autenticación, las headers y el content type son correctos?"
+      - "¿Es tu request, o la respuesta del otro lado?"
+      - "¿Qué muestra una prueba directa (curl/Postman) comparada con tu código?"
+
+  build:
+    description: "Errores de build y compilación."
+    questions:
+      - "¿Qué dice exactamente el primer error — no la cascada de errores que viene después?"
+      - "¿A qué archivo y línea apunta el compilador — coincide con donde sospechas el problema?"
+      - "¿Hiciste un build limpio, o podría ser un cache obsoleto o un artefacto antiguo?"
+      - "¿Están todas las dependencias presentes en las versiones que el proyecto espera?"
+      - "¿Compilaba antes? ¿Qué cambió — una dependencia, un flag, el toolchain?"
+      - "¿Es un error de sintaxis, de tipo, o un error del linker/símbolo faltante? Cada uno tiene una causa distinta."
+      - "¿Puedes reproducirlo con el archivo o target más pequeño posible?"
+
+  concurrency:
+    description: "Threads, async, races y deadlocks."
+    questions:
+      - "¿Qué datos se comparten entre threads o tareas — y qué los protege realmente?"
+      - "¿Podrían ejecutarse a la vez dos cosas que asumías que iban en orden?"
+      - "¿El bug desaparece cuando añades un delay o lo ejecutas en un solo thread? Eso apunta a un race."
+      - "¿Quién bloquea qué, en qué orden — podrían tomarse dos locks en órdenes opuestos (deadlock)?"
+      - "¿Estás esperando o haciendo join de todo, o podría quedarse una tarea descartada o sin terminar?"
+      - "¿El estado que lees ya está publicado de verdad, o podrías estar viendo un valor obsoleto?"
+      - "¿Es reproducible, o solo bajo carga? Lo intermitente suele significar timing."
+
+  memory:
+    description: "Crashes, fugas y corrupción."
+    questions:
+      - "¿Qué tipo de fallo es — un crash, una fuga, o datos incorrectos (use-after-free, overflow)?"
+      - "¿Qué acceso exacto revienta — un índice, un puntero, un unwrap sobre algo vacío?"
+      - "¿El buffer es lo bastante grande para todos los casos, incluyendo el límite y el vacío?"
+      - "¿Algo se libera o sale de scope mientras todavía se usa en otro sitio?"
+      - "¿La fuga crece con una acción concreta — puedes aislar la asignación que nunca se libera?"
+      - "¿Qué dicen un sanitizer o un debugger sobre la dirección que falla?"
+      - "¿La ownership y los lifetimes están claros, o es ambiguo quién libera qué y cuándo?"
+
+  network:
+    description: "HTTP, sockets, timeouts y DNS."
+    questions:
+      - "¿El request siquiera sale de tu máquina — qué muestra un trace de paquetes o de HTTP?"
+      - "¿Lo que falla es el DNS, la conexión, el TLS, o la respuesta en sí?"
+      - "¿Qué status code, timeout o error de conexión obtienes exactamente?"
+      - "¿La URL, el puerto, las headers y los timeouts son realmente los que pretendes?"
+      - "¿Funciona desde curl u otro cliente pero no desde tu código — o al revés?"
+      - "¿Podría ser inestable: reintentos, rate limits, o un servidor lento y sobrecargado?"
+      - "¿Manejas lecturas parciales, timeouts y desconexiones, no solo el happy path?"

@@ -17,7 +17,7 @@
 
 ![CI](https://github.com/j-pfalzgraf/rubberduck/actions/workflows/ci.yml/badge.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue)
-![Version](https://img.shields.io/badge/version-1.0.0-green)
+![Version](https://img.shields.io/badge/version-1.1.0-green)
 
 > The badges are generic [shields.io](https://shields.io) placeholders.
 >
@@ -36,28 +36,37 @@ blinks, quacks, and celebrates the moment the penny drops with you.
 Every session runs **fully offline**, with no external AI and no network. Only
 the built-in self-update downloads anything, and only when you ask it to.
 
-The interface is **internationalized and defaults to English**; German and
-French ship bundled (`--lang de` / `--lang fr`).
+The interface is **internationalized and defaults to English**; German, French
+and Spanish ship bundled (`--lang de` / `--lang fr` / `--lang es`).
 
 ## Features
 
 - 🦆 **Animated ASCII duck** — swims in, blinks, quacks; typewriter effect for the
-  questions. Degrades cleanly to static / `--quiet` output without a terminal.
+  questions, with eleven moods. Degrades cleanly to static / `--quiet` output
+  without a terminal.
 - 🌈 **Gradient celebration** — a rainbow confetti + EUREKA banner for the aha moment.
-- 🎬 **`demo` command** — an animated tour of every effect.
-- 📈 **Stats & history** — per-session history and aggregate metrics with an animated bar chart.
-- 🌍 **Internationalized** — English by default, German and French included; pick
-  with `--lang`, `config.yaml`, or `RUBBERDUCK_LANG`. Adding a language is one
-  `Catalog` literal the compiler checks for completeness.
-- 💬 **Interactive question dialog** — step by step through your problem.
-- 🎨 **Themes & colours** — `classic`, `midnight`, `mono`, `ocean`, `forest`,
-  `candy`; honours `NO_COLOR`.
+- 🎬 **`demo` command** — an animated tour of every effect (moods, eleven spinner
+  styles, nine gradients, ten themes).
+- 📈 **Stats & history** — `stats` aggregates metrics with an animated per-topic
+  bar chart (volume + solve rate); `history` lists your recent sessions.
+- 🌍 **Internationalized** — English by default; German, French and Spanish
+  included; pick with `--lang`, `config.yaml`, or `RUBBERDUCK_LANG`. Adding a
+  language is one `Catalog` literal the compiler checks for completeness.
+- 💬 **Interactive question dialog** — step by step through your problem, across
+  eight topics.
+- 💡 **Debugging tips** — `rubberduck tip` (a random one, delivered by the duck) /
+  `rubberduck tips` (the list); a closing tip ends each session.
+- 🩺 **`doctor` command** — a read-only check of your environment, settings and
+  bundled content.
+- 🎨 **Ten themes** — `classic`, `midnight`, `mono`, `ocean`, `forest`, `candy`,
+  `dracula`, `nord`, `gruvbox`, `solarized`; honours `NO_COLOR`. `rubberduck
+  themes` previews them.
 - 🧭 **Topic selection** — interactive picker or `--topic` directly.
-- 💡 **Aha moment** — type `!aha` when you find the bug: a celebration animation
+- ✨ **Aha moment** — type `!aha` when you find the bug: a celebration animation
   and a marker in the log.
 - 📊 **Statistics** — time to solution and per question in the summary.
 - 📝 **Markdown log** — optional via `--log`, including stats & the aha note.
-- 🧩 **Editable question pool** with topics & descriptions, per language.
+- 🧩 **Editable question & tips pools** with topics & descriptions, per language.
 - ⚙️ **Settings** in `config.yaml` (theme, speed, colour, language …).
 - 🐚 **Shell completions** for bash, zsh, fish, PowerShell, elvish.
 - 🔄 **Self-update & uninstall** — `rubberduck self update` / `self uninstall`.
@@ -146,37 +155,42 @@ A `brew tap` is **planned/optional** and not available yet.
 
 ## Usage
 
-| Command                              | Description                                              |
-| ------------------------------------ | -------------------------------------------------------- |
-| `rubberduck`                         | start a session (topic picker if no `--topic`)           |
-| `rubberduck --topic logic`           | a question set directly (`default`/`logic`/`perf`/`api`) |
-| `rubberduck --lang de`               | switch the language (`en` / `de` / `fr`)                 |
-| `rubberduck --log`                   | save the session as Markdown                             |
-| `rubberduck --quiet`                 | no duck/animation, just concise text                     |
-| `rubberduck --no-anim`               | static duck (no typewriter/swim)                         |
-| `rubberduck --speed fast`            | animation speed (`slow`/`normal`/`fast`)                 |
-| `rubberduck --color never`           | force/disable colour (`auto`/`always`/`never`)           |
-| `rubberduck --theme ocean`           | colour scheme (6 themes — see Appearance)                |
-| `rubberduck topics`                  | show the available topics with descriptions              |
-| `rubberduck languages`               | list the interface languages                             |
-| `rubberduck demo`                    | play an animated demo of every effect                    |
-| `rubberduck stats [--reset\|--json]` | aggregate stats (`--json` for scripts, `--reset` clears) |
-| `rubberduck completions zsh`         | print shell completions                                  |
-| `rubberduck man`                     | print a man page (roff)                                  |
-| `rubberduck config show`             | manage settings (`init`/`show`/`path`/`set`/`reset`)     |
-| `rubberduck --version`               | print the version                                        |
-| `rubberduck self update [--check]`   | update (`--check`: check only)                           |
-| `rubberduck self uninstall`          | remove rubberduck along with config and logs             |
+| Command                                | Description                                              |
+| -------------------------------------- | -------------------------------------------------------- |
+| `rubberduck`                           | start a session (topic picker if no `--topic`)           |
+| `rubberduck --topic logic`             | a question set directly (one of eight topics)            |
+| `rubberduck --lang es`                 | switch the language (`en` / `de` / `fr` / `es`)          |
+| `rubberduck --log`                     | save the session as Markdown                             |
+| `rubberduck --quiet`                   | no duck/animation, just concise text                     |
+| `rubberduck --no-anim`                 | static duck (no typewriter/swim)                         |
+| `rubberduck --speed fast`              | animation speed (`slow`/`normal`/`fast`)                 |
+| `rubberduck --color never`             | force/disable colour (`auto`/`always`/`never`)           |
+| `rubberduck --theme dracula`           | colour scheme (10 themes — see Appearance)               |
+| `rubberduck topics`                    | show the available topics with descriptions              |
+| `rubberduck languages`                 | list the interface languages                             |
+| `rubberduck themes`                    | preview every colour theme                               |
+| `rubberduck demo`                      | play an animated demo of every effect                    |
+| `rubberduck tip`                       | a random debugging tip, delivered by the duck            |
+| `rubberduck tips`                      | list every bundled debugging tip                         |
+| `rubberduck stats [--reset\|--json]`   | aggregate stats (`--json` for scripts, `--reset` clears) |
+| `rubberduck history [--limit N\|--json]` | your recent sessions (newest first)                    |
+| `rubberduck doctor`                    | check your environment, settings and bundled content     |
+| `rubberduck completions zsh`           | print shell completions                                  |
+| `rubberduck man`                       | print a man page (roff)                                  |
+| `rubberduck config show`               | manage settings (`init`/`show`/`path`/`set`/`reset`)     |
+| `rubberduck --version`                 | print the version                                        |
+| `rubberduck self update [--check]`     | update (`--check`: check only)                           |
+| `rubberduck self uninstall`            | remove rubberduck along with config and logs             |
 
 ## Languages (i18n)
 
-English is the default. German and French are bundled. The language is resolved
-as:
+English is the default. German, French and Spanish are bundled. The language is
+resolved as:
 
 **`--lang` flag › `RUBBERDUCK_LANG` env › `config.yaml` › English.**
 
 ```sh
-rubberduck --lang fr             # French for this run
+rubberduck --lang es             # Spanish for this run
 RUBBERDUCK_LANG=de rubberduck    # German via environment
 ```
 
@@ -199,8 +213,9 @@ summary shows the time to solution and the average per question.
 
 ## Animations & appearance
 
-- **`--theme`** one of `classic`, `midnight`, `mono`, `ocean`, `forest`, `candy`
-  (also settable for good via `config set theme <name>`).
+- **`--theme`** one of `classic`, `midnight`, `mono`, `ocean`, `forest`, `candy`,
+  `dracula`, `nord`, `gruvbox`, `solarized` (also settable for good via
+  `config set theme <name>`; preview them all with `rubberduck themes`).
 - **`--speed`** `slow` / `normal` / `fast` controls the pace.
 - **`--no-anim`** shows everything statically (one duck, no typewriter) — handy
   over SSH or on slow terminals.
@@ -211,16 +226,38 @@ summary shows the time to solution and the average per question.
 ## Topics
 
 `rubberduck topics` shows all topics with their descriptions (`*` marks the
-default). Without `--topic`, and in a real terminal, an interactive picker
-appears.
+default). The bundled set covers `default`, `logic`, `perf`, `api`, `build`,
+`concurrency`, `memory` and `network`. Without `--topic`, and in a real terminal,
+an interactive picker appears.
 
 ## Demo
 
 `rubberduck demo` plays an animated tour of every effect — the gradient title,
 the duck's fluid swim-in entrance, the typewriter speech bubble, a quack, every
-spinner style (braille, dots, line, arc, bounce, moon), all moods, a colour
-preview of every theme, and the confetti celebration. It respects `--speed`,
-`--no-anim`, `--theme` and `--color`.
+spinner style (braille, dots, line, arc, bounce, moon, pulse, clock, star, pong,
+breathe), all moods, every named gradient, a colour preview of every theme, and
+the confetti celebration. It respects `--speed`, `--no-anim`, `--theme` and
+`--color`.
+
+## Tips
+
+`rubberduck tip` has the duck swim in and deliver a single random debugging tip;
+`rubberduck tips` lists every tip. An interactive session also ends with a gentle
+parting tip. Tips are localized and live in an editable, per-language pool at
+`~/.config/rubberduck/tips.<lang>.yaml` (created on first run), so your team can
+curate its own.
+
+## Doctor
+
+`rubberduck doctor` is a quick, read-only health check: it reports the active
+version and language, the resolved theme, whether colour and animations will run
+in this terminal, where your config and data live, and how much content is
+bundled. Handy when something looks off, or to confirm a fresh install:
+
+```sh
+rubberduck doctor
+rubberduck doctor --lang es     # the same check, in Spanish
+```
 
 ## Statistics & history
 
@@ -233,6 +270,9 @@ an animated per-topic bar chart.
 rubberduck stats               # show your stats (animated)
 rubberduck stats --json        # machine-readable, for scripts
 rubberduck stats --reset       # clear the recorded history
+rubberduck history             # list recent sessions (newest first)
+rubberduck history --limit 5   # only the five most recent
+rubberduck history --json      # machine-readable, for scripts
 rubberduck config set history off   # stop recording entirely
 ```
 
@@ -269,12 +309,12 @@ win. Manage it with `rubberduck config init|show|path|set|reset`, e.g.
 
 ```yaml
 color: auto          # auto | always | never
-theme: classic       # classic | midnight | mono | ocean | forest | candy
+theme: classic       # classic | midnight | mono | ocean | forest | candy | dracula | nord | gruvbox | solarized
 animations: true
 speed: normal        # slow | normal | fast
 typewriter: true
 default_topic: default
-language: en          # en | de | fr
+language: en          # en | de | fr | es
 history: true         # record sessions for `stats`
 ```
 
@@ -347,9 +387,11 @@ Clearly separated layers, trait-based and testable:
 | `ui::duck`                           | DRY pose builder + swim/quack/celebrate animations                   |
 | `ui::scene`                          | `SpeechScene`: typewriter speech bubble over a live duck             |
 | `ui::gradient`                       | RGB gradients for the banner, confetti and charts                    |
+| `ui::bar`                            | reusable animated bar charts + inline meters (`GrowingBars`)         |
 | `ui` (`Ui`)                          | facade: resolves TTY/colour, degrades cleanly                        |
 | `app`                                | controller: topic selection, question dialog, aha                    |
-| `demo` / `stats` / `history`         | the demo tour, the stats view, session history                       |
+| `demo` / `stats` / `history`         | the demo tour, the stats view, session history & listing             |
+| `tips` / `doctor`                    | the tips pool; the environment health check                          |
 | `questions` / `session` / `config`   | data and state layer                                                 |
 | `cli` / `selfcmd` / `paths` / `util` | arguments, update/uninstall, paths, helpers                          |
 
@@ -361,11 +403,12 @@ tests against an in-memory buffer instead of a real terminal.
 | Purpose           | Path                                         | Contents                             |
 | ----------------- | -------------------------------------------- | ------------------------------------ |
 | Questions         | `~/.config/rubberduck/questions.<lang>.yaml` | topics & questions                   |
+| Tips              | `~/.config/rubberduck/tips.<lang>.yaml`      | debugging tips                       |
 | Settings          | `~/.config/rubberduck/config.yaml`           | theme, speed, lang …                 |
 | Logs / data       | `~/.rubberduck/`                             | `session-<date>.md`, `history.jsonl` |
 | Config override   | `$RUBBERDUCK_CONFIG_DIR`                     | overrides config path                |
 | Data override     | `$RUBBERDUCK_DATA_DIR`                       | overrides data path                  |
-| Language override | `$RUBBERDUCK_LANG`                           | `en` / `de` / `fr`                   |
+| Language override | `$RUBBERDUCK_LANG`                           | `en` / `de` / `fr` / `es`            |
 
 > The paths are laid out the same on every platform. On Windows `~` stands for
 > `%USERPROFILE%`.
@@ -378,12 +421,21 @@ GitHub Actions cover the project end to end:
   tests on Linux/macOS/Windows, an MSRV check (Rust 1.88), `shellcheck`,
   `actionlint` (lints the workflows themselves and their inline shell), a
   `cargo publish --dry-run` so the `cargo install` path can't silently break,
-  and a CLI smoke test that runs the built binary in English, German and French.
+  and a CLI smoke test that runs the built binary in English, German, French and
+  Spanish and exercises every command.
+- **Coverage** (`coverage.yml`): `cargo-llvm-cov` produces an LCOV report and a
+  line-coverage summary on every push and PR.
+- **Lint** (`lint.yml`): `typos` (spell-check) and `cargo-deny` (dependency
+  licences, advisories and bans against `deny.toml`).
 - **Audit** (`audit.yml`): weekly `cargo audit` against the RustSec database.
 - **Release** (`release.yml`): builds the six targets and attaches the archives,
   shell completions, a man page and `SHA256SUMS`; attests SLSA build provenance
   and writes release notes — all triggered by a `vX.Y.Z` tag.
+- **Labeler** (`labeler.yml`): labels pull requests by the areas they touch.
 - **Dependabot** keeps Cargo and Actions dependencies current.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add a language, topic, tip or
+theme.
 
 ## Planned
 

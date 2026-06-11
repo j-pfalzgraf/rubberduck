@@ -25,17 +25,32 @@ pub enum SpinnerStyle {
     Bounce,
     /// Moon phases.
     Moon,
+    /// A growing/shrinking block bar.
+    Pulse,
+    /// Clock faces ticking around the dial.
+    Clock,
+    /// A twinkling star.
+    Star,
+    /// A dot bouncing between two walls (pong).
+    Pong,
+    /// A breathing shade ramp.
+    Breathe,
 }
 
 impl SpinnerStyle {
     /// Every style, in showcase order.
-    pub const ALL: [SpinnerStyle; 6] = [
+    pub const ALL: [SpinnerStyle; 11] = [
         SpinnerStyle::Braille,
         SpinnerStyle::Dots,
         SpinnerStyle::Line,
         SpinnerStyle::Arc,
         SpinnerStyle::Bounce,
         SpinnerStyle::Moon,
+        SpinnerStyle::Pulse,
+        SpinnerStyle::Clock,
+        SpinnerStyle::Star,
+        SpinnerStyle::Pong,
+        SpinnerStyle::Breathe,
     ];
 
     /// The animation frames of this style.
@@ -48,6 +63,15 @@ impl SpinnerStyle {
             SpinnerStyle::Arc => &["◜", "◠", "◝", "◞", "◡", "◟"],
             SpinnerStyle::Bounce => &["⢄", "⢂", "⢁", "⡁", "⡈", "⡐", "⡠"],
             SpinnerStyle::Moon => &["🌑", "🌒", "🌓", "🌔", "🌕", "🌖", "🌗", "🌘"],
+            SpinnerStyle::Pulse => &[
+                "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█", "▇", "▆", "▅", "▄", "▃", "▂",
+            ],
+            SpinnerStyle::Clock => &[
+                "🕐", "🕑", "🕒", "🕓", "🕔", "🕕", "🕖", "🕗", "🕘", "🕙", "🕚", "🕛",
+            ],
+            SpinnerStyle::Star => &["✶", "✸", "✹", "✺", "✹", "✷"],
+            SpinnerStyle::Pong => &["⠁", "⠂", "⠄", "⡀", "⢀", "⠠", "⠐", "⠈"],
+            SpinnerStyle::Breathe => &[" ", "░", "▒", "▓", "█", "▓", "▒", "░"],
         }
     }
 
@@ -61,6 +85,11 @@ impl SpinnerStyle {
             SpinnerStyle::Arc => "arc",
             SpinnerStyle::Bounce => "bounce",
             SpinnerStyle::Moon => "moon",
+            SpinnerStyle::Pulse => "pulse",
+            SpinnerStyle::Clock => "clock",
+            SpinnerStyle::Star => "star",
+            SpinnerStyle::Pong => "pong",
+            SpinnerStyle::Breathe => "breathe",
         }
     }
 

@@ -1,0 +1,22 @@
+# rubberduck – consejos de depuración (Español)
+#
+# Una lista simple de consejos cortos. `rubberduck tip` muestra uno al azar;
+# `rubberduck tips` los lista todos. Editable libremente; tu equipo puede
+# compartirlo. Se crea en el primer arranque en ~/.config/rubberduck/tips.es.yaml.
+
+tips:
+  - "Explica el problema en voz alta, línea por línea — ese es todo el truco."
+  - "Lee el mensaje de error otra vez, despacio. La respuesta suele estar en la primera línea."
+  - "Hazlo más pequeño: reduce la entrada hasta que el bug apenas sobreviva."
+  - "Comprueba tus suposiciones — imprime ese valor del que estás *seguro*."
+  - "¿Qué cambió justo antes de que se rompiera? Empieza tu búsqueda ahí."
+  - "Si solo falla a veces, sospecha del timing, el orden o el estado compartido."
+  - "Reprodúcelo de forma fiable antes de intentar arreglarlo."
+  - "Cambia una cosa a la vez. Dos cambios se ocultan el efecto el uno al otro."
+  - "Háblale al patito de goma: un oyente que solo asiente sigue siendo un oyente."
+  - "Escribe el caso que falla como un test — así sabrás cuándo está arreglado."
+  - "Haz una búsqueda binaria del problema: ¿sigue rompiéndose en el punto intermedio?"
+  - "¿Off-by-one? Revisa de nuevo tu < frente a <=, y tu 0 frente a 1."
+  - "Aléjate cinco minutos. El bug espera; tus ojos frescos no."
+  - "Si la documentación y el comportamiento no coinciden, fíate de un pequeño experimento."
+  - "Nombra el bug en una sola frase. Si no puedes, todavía no lo entiendes."

@@ -6,12 +6,13 @@
 //!
 //! # Layout
 //!
-//! - [`ui`] – terminal layer: theme, animation engine, duck.
+//! - [`ui`] – terminal layer: theme, animation engine, duck, charts.
 //! - [`app`] – controller that orchestrates a session.
-//! - [`questions`] / [`session`] / [`config`] – data and state layer.
+//! - [`questions`] / [`tips`] / [`session`] / [`config`] – data and state layer.
 //! - [`i18n`] – languages and the translator.
 //! - [`cli`] – argument parsing; [`selfcmd`] – update/uninstall.
 //! - [`demo`] – the animated tour; [`history`]/[`stats`] – session insights.
+//! - [`doctor`] – environment diagnostics.
 //! - [`paths`] – platform-appropriate paths; [`util`] – small helpers.
 
 #![warn(missing_docs)]
@@ -20,6 +21,7 @@ pub mod app;
 pub mod cli;
 pub mod config;
 pub mod demo;
+pub mod doctor;
 pub mod history;
 pub mod i18n;
 pub mod paths;
@@ -27,6 +29,7 @@ pub mod questions;
 pub mod selfcmd;
 pub mod session;
 pub mod stats;
+pub mod tips;
 pub mod ui;
 pub mod util;
 
@@ -37,7 +40,7 @@ use app::App;
 use cli::{Cli, Command, ConfigAction, SelfAction};
 use config::Config;
 use i18n::Lang;
-use ui::{Ui, UiSettings};
+use ui::{Mood, Ui, UiSettings};
 
 /// Parses the CLI arguments and runs the matching command.
 pub fn run() -> Result<()> {
@@ -58,8 +61,13 @@ pub fn run() -> Result<()> {
         }
         Some(Command::Topics) => list_topics(&cli),
         Some(Command::Languages) => languages_command(&cli),
+        Some(Command::Themes) => themes_command(&cli),
         Some(Command::Demo) => demo_command(&cli),
+        Some(Command::Tip) => tip_command(&cli),
+        Some(Command::Tips) => tips_command(&cli),
         Some(Command::Stats { reset, json }) => stats_command(&cli, reset, json),
+        Some(Command::History { limit, json }) => history_command(&cli, limit, json),
+        Some(Command::Doctor) => doctor_command(&cli),
         Some(Command::Completions { shell }) => {
             print_completions(shell);
             Ok(())
@@ -211,11 +219,63 @@ fn demo_command(cli: &Cli) -> Result<()> {
     demo::run(&mut ui)
 }
 
+/// Lists the available colour themes with a live preview.
+fn themes_command(cli: &Cli) -> Result<()> {
+    let config = Config::load_or_default();
+    let ui = Ui::new(ui_settings(&config, cli));
+    let st = ui.styler();
+    let tr = ui.tr();
+    println!("{}", st.accent(tr.themes_header()));
+    ui.theme_previews();
+    println!("\n{}", st.dim(tr.themes_hint()));
+    Ok(())
+}
+
+/// Shows a single random debugging tip, delivered by the duck.
+fn tip_command(cli: &Cli) -> Result<()> {
+    let config = Config::load_or_default();
+    let mut ui = Ui::new(ui_settings(&config, cli));
+    let lang = ui.tr().lang();
+    let pool = tips::load_or_init(lang)?;
+    let tip = pool.random().to_string();
+    ui.swim_in(Mood::Reading)?;
+    ui.duck_says(&tip, Mood::Reading)?;
+    Ok(())
+}
+
+/// Lists every bundled debugging tip for the active language.
+fn tips_command(cli: &Cli) -> Result<()> {
+    let config = Config::load_or_default();
+    let ui = Ui::new(ui_settings(&config, cli));
+    let lang = ui.tr().lang();
+    let pool = tips::load_or_init(lang)?;
+    let st = ui.styler();
+    println!("{}", st.accent(ui.tr().tips_header()));
+    for (i, tip) in pool.all().iter().enumerate() {
+        println!("  {} {}", st.dim(&format!("{:>2}.", i + 1)), st.text(tip));
+    }
+    Ok(())
+}
+
 /// Shows aggregate statistics from the session history (or clears it).
 fn stats_command(cli: &Cli, reset: bool, json: bool) -> Result<()> {
     let config = Config::load_or_default();
     let mut ui = Ui::new(ui_settings(&config, cli));
     stats::show(&mut ui, reset, json)
+}
+
+/// Lists the most recent recorded sessions.
+fn history_command(cli: &Cli, limit: Option<usize>, json: bool) -> Result<()> {
+    let config = Config::load_or_default();
+    let mut ui = Ui::new(ui_settings(&config, cli));
+    history::show(&mut ui, limit, json)
+}
+
+/// Runs the environment / configuration diagnostics.
+fn doctor_command(cli: &Cli) -> Result<()> {
+    let config = Config::load_or_default();
+    let mut ui = Ui::new(ui_settings(&config, cli));
+    doctor::run(&mut ui)
 }
 
 /// Writes shell completions for `shell` to stdout.

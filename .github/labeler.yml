@@ -1,0 +1,62 @@
+# Path-based pull-request labels for actions/labeler@v5.
+
+"area/ui":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/ui/**"
+
+"area/i18n":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/i18n.rs"
+          - "questions.*.yaml"
+          - "tips.*.yaml"
+
+"area/cli":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/cli.rs"
+          - "src/lib.rs"
+          - "src/main.rs"
+
+"area/commands":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/stats.rs"
+          - "src/history.rs"
+          - "src/doctor.rs"
+          - "src/demo.rs"
+          - "src/tips.rs"
+          - "src/selfcmd.rs"
+
+"area/config":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "src/config.rs"
+          - "src/paths.rs"
+
+"area/docs":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "**/*.md"
+          - "LICENSE"
+
+"area/ci":
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"
+          - "deny.toml"
+          - "typos.toml"
+
+"area/packaging":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "install.sh"
+          - "install.ps1"
+          - "uninstall.sh"
+          - "Cargo.toml"
+
+"area/tests":
+  - changed-files:
+      - any-glob-to-any-file:
+          - "tests/**"

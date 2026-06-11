@@ -62,6 +62,19 @@ impl App {
             println!("{}", self.ui.styler().dim(&msg));
         }
 
+        // A gentle parting tip — only when a human is watching.
+        if self.ui.is_interactive() && !self.ui.is_quiet() {
+            if let Ok(pool) = crate::tips::load_or_init(self.tr.lang()) {
+                let label = self.tr.tip_label();
+                let st = self.ui.styler();
+                println!(
+                    "\n{} {}",
+                    st.accent(&format!("💡 {label}:")),
+                    st.dim(pool.random())
+                );
+            }
+        }
+
         // Record the session for `stats` (best-effort; skip trivial no-op runs).
         if self.record_history && (!transcript.entries.is_empty() || transcript.aha.is_some()) {
             let _ = crate::history::append(&crate::history::Record::from_transcript(&transcript));

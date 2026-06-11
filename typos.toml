@@ -1,0 +1,26 @@
+# Configuration for `typos` (https://github.com/crate-ci/typos).
+#
+# rubberduck ships content in several languages. A spell-checker tuned for
+# English necessarily flags German, French and Spanish words ("oder", "fonction",
+# "tema", …) as typos, so the translated content files and the i18n catalog
+# (which holds the DE/FR/ES strings) are excluded. Everything else — code,
+# comments, docs, English content — is checked normally.
+
+[files]
+extend-exclude = [
+  "Cargo.lock",
+  "questions.de.yaml",
+  "questions.fr.yaml",
+  "questions.es.yaml",
+  "tips.de.yaml",
+  "tips.fr.yaml",
+  "tips.es.yaml",
+  "src/i18n.rs",
+]
+
+[default.extend-words]
+# "quack"/"Quak" duck noises and a few intentional spellings.
+Quak = "Quak"
+# Deliberate misspellings in the "did you mean?" suggestion tests.
+defalt = "defalt"
+logc = "logc"

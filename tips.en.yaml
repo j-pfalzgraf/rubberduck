@@ -1,0 +1,22 @@
+# rubberduck – debugging tips (English)
+#
+# A flat list of short tips. `rubberduck tip` shows a random one; `rubberduck
+# tips` lists them all. Edit freely — your team can share this file. It is
+# created on first run at ~/.config/rubberduck/tips.en.yaml.
+
+tips:
+  - "Explain the problem out loud, line by line — that is the whole trick."
+  - "Read the error message again, slowly. The answer is often in the first line."
+  - "Make it smaller: shrink the input until the bug only just survives."
+  - "Check your assumptions — print the one value you are *sure* about."
+  - "What changed right before it broke? Start your search there."
+  - "If it only fails sometimes, suspect timing, ordering, or shared state."
+  - "Reproduce it reliably before you try to fix it."
+  - "Change one thing at a time. Two changes hide each other's effects."
+  - "Rubber-duck it: a listener who only nods is still a listener."
+  - "Write the failing case as a test — then you will know when it is fixed."
+  - "Binary-search the problem: does it still break at the halfway point?"
+  - "Off-by-one? Re-check your < versus <=, and your 0 versus 1."
+  - "Step away for five minutes. The bug waits; your fresh eyes do not."
+  - "If the docs and the behaviour disagree, trust a small experiment."
+  - "Name the bug in one sentence. If you can't, you don't understand it yet."

@@ -7,7 +7,9 @@
 //! never breaks the stats view.
 
 use crate::paths;
-use crate::session::Transcript;
+use crate::session::{format_duration, Transcript};
+use crate::ui::gradient::Gradient;
+use crate::ui::Ui;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -104,6 +106,78 @@ pub fn clear() -> Result<()> {
     Ok(())
 }
 
+/// Default number of recent sessions shown by `rubberduck history`.
+const DEFAULT_HISTORY_LIMIT: usize = 10;
+
+/// Shows the most recent recorded sessions (`rubberduck history`).
+///
+/// Human output is a compact, newest-first table; `json` emits a stable object
+/// for scripts. `limit` caps how many sessions are shown (newest first).
+pub fn show(ui: &mut Ui, limit: Option<usize>, json: bool) -> Result<()> {
+    let records = load_all()?;
+    // File order is oldest-first (append-only); present newest-first.
+    let newest_first: Vec<&Record> = records.iter().rev().collect();
+
+    if json {
+        let shown: Vec<&Record> = match limit {
+            Some(n) => newest_first.into_iter().take(n).collect(),
+            None => newest_first,
+        };
+        let view = HistoryView {
+            total: records.len(),
+            shown: shown.len(),
+            sessions: shown,
+        };
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&view).context("Could not serialize history")?
+        );
+        return Ok(());
+    }
+
+    let tr = ui.tr();
+    ui.gradient_banner(tr.history_header(), &Gradient::sunrise());
+
+    if records.is_empty() {
+        println!("{}", ui.styler().dim(tr.history_empty()));
+        return Ok(());
+    }
+
+    let cap = limit.unwrap_or(DEFAULT_HISTORY_LIMIT);
+    let shown: Vec<&Record> = newest_first.into_iter().take(cap).collect();
+    let st = ui.styler();
+    for r in &shown {
+        let glyph = if r.solved {
+            st.success("✓")
+        } else {
+            st.dim("·")
+        };
+        println!(
+            "  {}  {} {}  {}  {}",
+            st.dim(&r.date),
+            glyph,
+            st.text(&format!("{:<12}", r.topic)),
+            st.dim(&format!("{}/{} ", r.answered, r.asked)),
+            st.dim(&format_duration(r.total_seconds)),
+        );
+    }
+    if records.len() > shown.len() {
+        println!(
+            "\n{}",
+            st.dim(&tr.history_showing(shown.len(), records.len()))
+        );
+    }
+    Ok(())
+}
+
+/// Machine-readable view for `history --json`.
+#[derive(Serialize)]
+struct HistoryView<'a> {
+    total: usize,
+    shown: usize,
+    sessions: Vec<&'a Record>,
+}
+
 /// Aggregate metrics over a topic.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
 pub struct TopicAggregate {
@@ -111,6 +185,14 @@ pub struct TopicAggregate {
     pub sessions: usize,
     /// Number that were solved.
     pub solved: usize,
+}
+
+impl TopicAggregate {
+    /// Percentage of this topic's sessions that were solved (0–100).
+    #[must_use]
+    pub fn solve_rate(&self) -> u32 {
+        (self.solved * 100).checked_div(self.sessions).unwrap_or(0) as u32
+    }
 }
 
 /// Aggregate metrics over a set of [`Record`]s.

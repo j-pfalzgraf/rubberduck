@@ -29,14 +29,25 @@ pub enum Mood {
     Celebrating,
     /// Sleeping.
     Sleeping,
+    /// Puzzled, not following.
+    Confused,
+    /// Pleased with itself.
+    Proud,
+    /// Reading along / studying the problem.
+    Reading,
 }
 
 /// The open eye for each mood.
 #[must_use]
 pub fn eye_for(mood: Mood) -> char {
     match mood {
-        Mood::Idle | Mood::Listening | Mood::Thinking | Mood::Curious => 'o',
-        Mood::Happy | Mood::Celebrating => '^',
+        Mood::Idle
+        | Mood::Listening
+        | Mood::Thinking
+        | Mood::Curious
+        | Mood::Confused
+        | Mood::Reading => 'o',
+        Mood::Happy | Mood::Celebrating | Mood::Proud => '^',
         Mood::Surprised => 'O',
         Mood::Sleeping => '-',
     }
@@ -79,7 +90,14 @@ pub fn decorate(mut art: Vec<String>, mood: Mood) -> Vec<String> {
                 art[1].push_str("  ?");
             }
         }
+        Mood::Confused => {
+            if art.len() > 1 {
+                art[1].push_str("  ?!");
+            }
+        }
         Mood::Celebrating => art.insert(0, "  \\ ✨ /".to_string()),
+        Mood::Proud => art.insert(0, "   ★".to_string()),
+        Mood::Reading => art.insert(0, "   📖".to_string()),
         _ => {}
     }
     art

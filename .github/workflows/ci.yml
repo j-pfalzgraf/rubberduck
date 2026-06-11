@@ -91,8 +91,14 @@ jobs:
         run: |
           set -euo pipefail
           version=1.7.7
-          url="https://github.com/rhysd/actionlint/releases/download/v${version}/actionlint_${version}_linux_amd64.tar.gz"
-          curl -fsSL "$url" | tar -xz actionlint
+          base="https://github.com/rhysd/actionlint/releases/download/v${version}"
+          asset="actionlint_${version}_linux_amd64.tar.gz"
+          # Download the asset and its published checksums, then verify before
+          # extracting — the only CI binary fetched outside a pinned action.
+          curl -fsSL -o "$asset" "${base}/${asset}"
+          curl -fsSL -o checksums.txt "${base}/actionlint_${version}_checksums.txt"
+          sha256sum --ignore-missing -c checksums.txt
+          tar -xzf "$asset" actionlint
       - name: Lint workflows
         run: ./actionlint -color
 
@@ -120,15 +126,26 @@ jobs:
           "$bin" --version
           "$bin" --help >/dev/null
           "$bin" topics | grep "Available topics" >/dev/null
+          "$bin" topics | grep "concurrency" >/dev/null
           "$bin" topics --lang de | grep "Verfügbare Themen" >/dev/null
           "$bin" languages | grep "English" >/dev/null
           "$bin" languages | grep "Français" >/dev/null
+          "$bin" languages | grep "Español" >/dev/null
           "$bin" topics --lang fr | grep "Sujets disponibles" >/dev/null
+          "$bin" topics --lang es | grep "Temas disponibles" >/dev/null
+          "$bin" themes | grep "dracula" >/dev/null
+          "$bin" tips | grep "Debugging tips" >/dev/null
+          "$bin" tips --lang es | grep "Consejos" >/dev/null
+          "$bin" tip --no-anim --quiet >/dev/null
+          "$bin" doctor | grep "8 topics (en)" >/dev/null
           "$bin" completions bash | grep "rubberduck" >/dev/null
           "$bin" man | grep "rubberduck" >/dev/null
           "$bin" stats --json | grep '"sessions"' >/dev/null
-          "$bin" config set theme ocean
-          "$bin" config show | grep "theme: ocean" >/dev/null
+          "$bin" history --json | grep '"total"' >/dev/null
+          "$bin" config set theme dracula
+          "$bin" config show | grep "theme: dracula" >/dev/null
+          "$bin" config set language es
+          "$bin" config show | grep "language: es" >/dev/null
           "$bin" config reset
           "$bin" config show | grep "theme: classic" >/dev/null
           echo "CLI smoke test passed"

@@ -58,3 +58,47 @@ topics:
       - "Are authentication, headers and content type correct?"
       - "Is it your request, or the other side's response?"
       - "What does a direct test (curl/Postman) show compared to your code?"
+
+  build:
+    description: "Build and compile errors."
+    questions:
+      - "What exactly does the first error say — not the cascade of errors after it?"
+      - "Which file and line does the compiler point to — does that match where you suspect the problem?"
+      - "Did you run a clean build, or could this be a stale cache or an old artifact?"
+      - "Are all dependencies present at the versions the project expects?"
+      - "Did it build before? What changed — a dependency, a flag, the toolchain?"
+      - "Is it a syntax error, a type error, or a linker/missing-symbol error? Each has a different cause."
+      - "Can you reproduce it with the smallest possible file or target?"
+
+  concurrency:
+    description: "Threads, async, races and deadlocks."
+    questions:
+      - "Which data is shared between threads or tasks — and what actually guards it?"
+      - "Could two things run at the same time that you assumed run in order?"
+      - "Does the bug vanish when you add a delay or run single-threaded? That points at a race."
+      - "Who locks what, in which order — could two locks be taken in opposite orders (deadlock)?"
+      - "Are you awaiting or joining everything, or could a task be dropped or left unfinished?"
+      - "Is the state you read actually published yet, or could you be seeing a stale value?"
+      - "Is it reproducible, or only under load? Intermittent usually means timing."
+
+  memory:
+    description: "Crashes, leaks and corruption."
+    questions:
+      - "What kind of failure is it — a crash, a leak, or wrong data (use-after-free, overflow)?"
+      - "Which exact access blows up — an index, a pointer, an unwrap on something empty?"
+      - "Is the buffer big enough for every case, including the boundary and the empty one?"
+      - "Does something get freed or go out of scope while it is still used elsewhere?"
+      - "Does the leak grow with one specific action — can you isolate the allocation that is never released?"
+      - "What do a sanitizer or a debugger say about the faulting address?"
+      - "Are ownership and lifetimes clear, or is it ambiguous who frees what and when?"
+
+  network:
+    description: "HTTP, sockets, timeouts and DNS."
+    questions:
+      - "Does the request even leave your machine — what does a packet or HTTP trace show?"
+      - "Is it DNS, the connection, TLS, or the response itself that fails?"
+      - "Which status code, timeout, or connection error do you get exactly?"
+      - "Are the URL, port, headers and timeouts what you actually intend?"
+      - "Does it work from curl or another client but not your code — or the other way round?"
+      - "Could it be flaky: retries, rate limits, or a slow and overloaded server?"
+      - "Do you handle partial reads, timeouts and disconnects, not just the happy path?"

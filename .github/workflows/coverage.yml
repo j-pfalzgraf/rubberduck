@@ -1,0 +1,57 @@
+# Line coverage via cargo-llvm-cov. Produces an LCOV artifact and a coverage
+# summary in the job summary on every push and pull request. No external service
+# or token is required.
+name: Coverage
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: coverage-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  coverage:
+    name: cargo-llvm-cov
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: llvm-tools-preview
+      - uses: Swatinem/rust-cache@v2
+      - name: Install OpenSSL headers
+        run: sudo apt-get update && sudo apt-get install -y libssl-dev pkg-config
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+      - name: Generate LCOV coverage
+        # Default features (system OpenSSL via libssl-dev above), matching the
+        # test build — avoids the slow vendored-OpenSSL source build.
+        run: cargo llvm-cov --locked --lcov --output-path lcov.info
+      - name: Write coverage summary
+        run: |
+          set -euo pipefail
+          {
+            echo '### Coverage'
+            echo ''
+            echo '```'
+            cargo llvm-cov report --summary-only
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload LCOV report
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-lcov
+          path: lcov.info
+          if-no-files-found: error
+          retention-days: 14

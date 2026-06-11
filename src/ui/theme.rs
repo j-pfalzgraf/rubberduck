@@ -61,8 +61,18 @@ const fn rgb(r: u8, g: u8, b: u8) -> Color {
 
 impl Theme {
     /// Names of all built-in themes.
-    pub const NAMES: &'static [&'static str] =
-        &["classic", "midnight", "mono", "ocean", "forest", "candy"];
+    pub const NAMES: &'static [&'static str] = &[
+        "classic",
+        "midnight",
+        "mono",
+        "ocean",
+        "forest",
+        "candy",
+        "dracula",
+        "nord",
+        "gruvbox",
+        "solarized",
+    ];
 
     /// Warm default theme with a yellow duck.
     pub const CLASSIC: Theme = Theme {
@@ -152,6 +162,54 @@ impl Theme {
         water: rgb(160, 120, 220),
     };
 
+    /// The popular "Dracula" palette (dark, vibrant).
+    pub const DRACULA: Theme = Theme {
+        name: "dracula",
+        duck: rgb(241, 250, 140),   // yellow
+        accent: rgb(189, 147, 249), // purple
+        bubble: rgb(248, 248, 242),
+        text: rgb(248, 248, 242),
+        dim: rgb(98, 114, 164), // comment
+        success: rgb(80, 250, 123),
+        water: rgb(139, 233, 253), // cyan
+    };
+
+    /// The arctic "Nord" palette (cool, muted blues).
+    pub const NORD: Theme = Theme {
+        name: "nord",
+        duck: rgb(235, 203, 139),   // frost yellow (aurora)
+        accent: rgb(136, 192, 208), // frost cyan
+        bubble: rgb(216, 222, 233),
+        text: rgb(229, 233, 240),
+        dim: rgb(76, 86, 106),
+        success: rgb(163, 190, 140),
+        water: rgb(94, 129, 172),
+    };
+
+    /// The warm retro "Gruvbox" palette.
+    pub const GRUVBOX: Theme = Theme {
+        name: "gruvbox",
+        duck: rgb(250, 189, 47),    // bright yellow
+        accent: rgb(131, 165, 152), // aqua
+        bubble: rgb(235, 219, 178),
+        text: rgb(235, 219, 178),
+        dim: rgb(146, 131, 116),
+        success: rgb(184, 187, 38),
+        water: rgb(69, 133, 136),
+    };
+
+    /// The balanced "Solarized" palette (dark variant accents).
+    pub const SOLARIZED: Theme = Theme {
+        name: "solarized",
+        duck: rgb(181, 137, 0),    // yellow
+        accent: rgb(38, 139, 210), // blue
+        bubble: rgb(147, 161, 161),
+        text: rgb(238, 232, 213),
+        dim: rgb(88, 110, 117),
+        success: rgb(133, 153, 0),
+        water: rgb(42, 161, 152), // cyan
+    };
+
     /// Theme by name; an unknown name returns [`Theme::CLASSIC`].
     #[must_use]
     pub fn by_name(name: &str) -> Theme {
@@ -161,6 +219,10 @@ impl Theme {
             "ocean" => Self::OCEAN,
             "forest" => Self::FOREST,
             "candy" => Self::CANDY,
+            "dracula" => Self::DRACULA,
+            "nord" => Self::NORD,
+            "gruvbox" => Self::GRUVBOX,
+            "solarized" => Self::SOLARIZED,
             _ => Self::CLASSIC,
         }
     }

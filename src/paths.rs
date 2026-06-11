@@ -5,7 +5,8 @@
 
 use anyhow::{Context, Result};
 use directories::BaseDirs;
-use std::path::PathBuf;
+use std::fs;
+use std::path::{Path, PathBuf};
 
 /// Config directory `~/.config/rubberduck` – identical on all platforms (per the
 /// spec and matching the install/uninstall scripts and the README).
@@ -29,6 +30,24 @@ pub fn data_dir() -> Result<PathBuf> {
     }
     let dirs = BaseDirs::new().context("Could not determine the home directory")?;
     Ok(dirs.home_dir().join(".rubberduck"))
+}
+
+/// Reads `path`, creating it with `default_contents` first if it is missing.
+///
+/// This is the shared "load a user-editable file, seeding it on first run"
+/// primitive behind the question pool and the tips pool (DRY): on first use the
+/// bundled defaults are written to disk so a team can edit and share them, and
+/// every later run simply reads what is there.
+pub fn read_or_init(path: &Path, default_contents: &str) -> Result<String> {
+    if !path.exists() {
+        if let Some(dir) = path.parent() {
+            fs::create_dir_all(dir)
+                .with_context(|| format!("Could not create {}", dir.display()))?;
+        }
+        fs::write(path, default_contents)
+            .with_context(|| format!("Could not write {}", path.display()))?;
+    }
+    fs::read_to_string(path).with_context(|| format!("Could not read {}", path.display()))
 }
 
 #[cfg(test)]

@@ -52,6 +52,60 @@ impl Gradient {
         Self::new(vec![(70, 110, 200), (96, 200, 220), (120, 230, 180)])
     }
 
+    /// A leafy forest (deep green → lime).
+    #[must_use]
+    pub fn forest() -> Self {
+        Self::new(vec![(34, 120, 70), (124, 193, 86), (198, 222, 120)])
+    }
+
+    /// A sweet candy (pink → peach → lilac).
+    #[must_use]
+    pub fn candy() -> Self {
+        Self::new(vec![(255, 133, 206), (255, 184, 140), (180, 140, 230)])
+    }
+
+    /// A soft sunrise (indigo → coral → gold).
+    #[must_use]
+    pub fn sunrise() -> Self {
+        Self::new(vec![(86, 96, 180), (236, 120, 120), (255, 214, 128)])
+    }
+
+    /// A hot fire (deep red → orange → yellow).
+    #[must_use]
+    pub fn fire() -> Self {
+        Self::new(vec![(200, 40, 40), (255, 130, 50), (255, 220, 90)])
+    }
+
+    /// A fresh mint (teal → green → pale lime).
+    #[must_use]
+    pub fn mint() -> Self {
+        Self::new(vec![(40, 170, 150), (120, 210, 160), (200, 240, 190)])
+    }
+
+    /// A monochrome ramp (dark grey → white), for colour-shy terminals.
+    #[must_use]
+    pub fn mono() -> Self {
+        Self::new(vec![(120, 120, 120), (200, 200, 200), (245, 245, 245)])
+    }
+
+    /// All named gradients in showcase order, paired with their name.
+    ///
+    /// Adding a gradient here makes it appear in `rubberduck demo` automatically.
+    #[must_use]
+    pub fn showcase() -> Vec<(&'static str, Self)> {
+        vec![
+            ("rainbow", Self::rainbow()),
+            ("sunset", Self::sunset()),
+            ("ocean", Self::ocean()),
+            ("forest", Self::forest()),
+            ("candy", Self::candy()),
+            ("sunrise", Self::sunrise()),
+            ("fire", Self::fire()),
+            ("mint", Self::mint()),
+            ("mono", Self::mono()),
+        ]
+    }
+
     /// Samples the gradient at `t` (clamped to `[0, 1]`).
     #[must_use]
     pub fn sample(&self, t: f32) -> Stop {
@@ -124,6 +178,19 @@ mod tests {
     fn empty_stops_fall_back() {
         let g = Gradient::new(vec![]);
         assert_eq!(g.sample(0.5), (255, 255, 255));
+    }
+
+    #[test]
+    fn every_named_gradient_samples_across_the_range() {
+        for (name, g) in Gradient::showcase() {
+            // Sampling must never panic and must stay within byte range for any t.
+            for step in 0..=10 {
+                let (r, gg, b) = g.sample(step as f32 / 10.0);
+                let _ = (r, gg, b); // u8 by construction
+            }
+            assert!(!name.is_empty());
+        }
+        assert!(Gradient::showcase().len() >= 9);
     }
 
     #[test]

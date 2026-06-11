@@ -21,9 +21,12 @@ use clap_complete::Shell;
         rubberduck --topic logic       jump straight into the logic question set\n  \
         rubberduck --log               save the session as Markdown\n  \
         rubberduck --no-anim --quiet   no animation/duck (e.g. for logs)\n  \
-        rubberduck --theme midnight    a different colour scheme\n  \
-        rubberduck --lang de           switch the language to German\n  \
+        rubberduck --theme dracula     a different colour scheme\n  \
+        rubberduck --lang es           switch the language to Spanish\n  \
         rubberduck topics              show the available topics\n  \
+        rubberduck tip                 a random debugging tip\n  \
+        rubberduck history             your recent sessions\n  \
+        rubberduck doctor              check your setup\n  \
         rubberduck completions zsh     print shell completions\n  \
         rubberduck self update         update to the latest version\n\n\
         Tip: type !aha during a session as soon as you have found the bug."
@@ -55,7 +58,8 @@ pub struct Cli {
     #[arg(long, value_enum, global = true)]
     pub color: Option<ColorPref>,
 
-    /// Colour scheme (classic, midnight, mono, ocean, forest, candy).
+    /// Colour scheme: classic, midnight, mono, ocean, forest, candy, dracula,
+    /// nord, gruvbox, solarized (see `rubberduck themes`).
     #[arg(
         long,
         global = true,
@@ -63,7 +67,7 @@ pub struct Cli {
     )]
     pub theme: Option<String>,
 
-    /// User-interface language (en, de, fr).
+    /// User-interface language (en, de, fr, es).
     #[arg(long, value_enum, global = true)]
     pub lang: Option<Lang>,
 
@@ -81,8 +85,17 @@ pub enum Command {
     /// List the available interface languages.
     Languages,
 
+    /// List the available colour themes with a live preview.
+    Themes,
+
     /// Play an animated demo of every effect.
     Demo,
+
+    /// Show a random debugging tip.
+    Tip,
+
+    /// List all bundled debugging tips.
+    Tips,
 
     /// Show aggregate statistics from your session history.
     Stats {
@@ -93,6 +106,19 @@ pub enum Command {
         #[arg(long)]
         json: bool,
     },
+
+    /// List your most recent recorded sessions.
+    History {
+        /// How many sessions to show (newest first; default 10).
+        #[arg(long, value_name = "N")]
+        limit: Option<usize>,
+        /// Print machine-readable JSON instead of the table.
+        #[arg(long)]
+        json: bool,
+    },
+
+    /// Check the environment, settings and bundled content.
+    Doctor,
 
     /// Print shell completions (bash, zsh, fish, powershell, elvish).
     Completions {

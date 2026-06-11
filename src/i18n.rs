@@ -1,14 +1,14 @@
 //! Internationalization (i18n).
 //!
-//! English is the default language; German and French ship bundled. [`Lang`]
-//! selects the language and [`Tr`] is a small, `Copy` translator value object
-//! that produces every user-facing string.
+//! English is the default language; German, French and Spanish ship bundled.
+//! [`Lang`] selects the language and [`Tr`] is a small, `Copy` translator value
+//! object that produces every user-facing string.
 //!
 //! # How translations are stored
 //!
 //! Every user-facing string lives in a `Catalog` — a plain data struct with one
 //! field per message. There is exactly one `const` catalog per language (`EN`,
-//! `DE`, `FR`). The [`Tr`] methods are thin accessors over the active catalog;
+//! `DE`, `FR`, `ES`). The [`Tr`] methods are thin accessors over the active catalog;
 //! they never branch on the language themselves. The payoff is DRY scalability:
 //! **adding a language is one more `Catalog` literal**, and because a struct
 //! literal must set every field, the compiler refuses to let a message be
@@ -51,39 +51,47 @@ pub enum Lang {
     #[value(name = "fr", alias = "french", alias = "francais", alias = "français")]
     #[serde(rename = "fr")]
     French,
+    /// Spanish / Español.
+    #[value(name = "es", alias = "spanish", alias = "espanol", alias = "español")]
+    #[serde(rename = "es")]
+    Spanish,
 }
 
 impl Lang {
     /// All supported languages, in display order.
-    pub const ALL: [Lang; 3] = [Lang::English, Lang::German, Lang::French];
+    pub const ALL: [Lang; 4] = [Lang::English, Lang::German, Lang::French, Lang::Spanish];
 
-    /// The short ISO-639-1 code (`"en"` / `"de"` / `"fr"`).
+    /// The short ISO-639-1 code (`"en"` / `"de"` / `"fr"` / `"es"`).
     #[must_use]
     pub fn code(self) -> &'static str {
         match self {
             Lang::English => "en",
             Lang::German => "de",
             Lang::French => "fr",
+            Lang::Spanish => "es",
         }
     }
 
-    /// The endonym shown in pickers (`"English"` / `"Deutsch"` / `"Français"`).
+    /// The endonym shown in pickers (`"English"` / `"Deutsch"` / `"Français"` /
+    /// `"Español"`).
     #[must_use]
     pub fn label(self) -> &'static str {
         match self {
             Lang::English => "English",
             Lang::German => "Deutsch",
             Lang::French => "Français",
+            Lang::Spanish => "Español",
         }
     }
 
-    /// Parses a language code/name (`"en"`, `"english"`, `"fr"`, `"français"` …).
+    /// Parses a language code/name (`"en"`, `"english"`, `"fr"`, `"español"` …).
     #[must_use]
     pub fn from_code(s: &str) -> Option<Lang> {
         match s.trim().to_ascii_lowercase().as_str() {
             "en" | "english" => Some(Lang::English),
             "de" | "german" | "deutsch" => Some(Lang::German),
             "fr" | "french" | "francais" | "français" => Some(Lang::French),
+            "es" | "spanish" | "espanol" | "español" => Some(Lang::Spanish),
             _ => None,
         }
     }
@@ -137,8 +145,8 @@ fn fill(template: &str, args: &[(&str, &str)]) -> String {
 
 /// All user-facing strings for one language.
 ///
-/// One `const` instance exists per language (`EN`, `DE`, `FR`). Because every
-/// field must be set in the literal, the compiler guarantees a new language
+/// One `const` instance exists per language (`EN`, `DE`, `FR`, `ES`). Because
+/// every field must be set in the literal, the compiler guarantees a new language
 /// translates every message. Fields whose name maps to a templated message hold
 /// a template with `{placeholder}` markers (see `fill`).
 struct Catalog {
@@ -176,6 +184,7 @@ struct Catalog {
     demo_section_moods: &'static str,
     demo_section_themes: &'static str,
     demo_section_spinners: &'static str,
+    demo_section_gradients: &'static str,
     demo_done: &'static str,
     // ----- moods ----------------------------------------------------------
     mood_idle: &'static str,
@@ -186,6 +195,9 @@ struct Catalog {
     mood_surprised: &'static str,
     mood_celebrating: &'static str,
     mood_sleeping: &'static str,
+    mood_confused: &'static str,
+    mood_proud: &'static str,
+    mood_reading: &'static str,
     // ----- stats ----------------------------------------------------------
     stats_header: &'static str,
     stats_empty: &'static str,
@@ -195,6 +207,34 @@ struct Catalog {
     stats_avg_solution: &'static str, // {d}
     stats_by_topic: &'static str,
     stats_cleared: &'static str,
+    // ----- tips -----------------------------------------------------------
+    tip_label: &'static str,
+    tips_header: &'static str,
+    // ----- themes ---------------------------------------------------------
+    themes_header: &'static str,
+    themes_hint: &'static str,
+    // ----- history --------------------------------------------------------
+    history_header: &'static str,
+    history_empty: &'static str,
+    history_showing: &'static str, // {shown} {total}
+    // ----- doctor ---------------------------------------------------------
+    doctor_header: &'static str,
+    doctor_version: &'static str,
+    doctor_language: &'static str,
+    doctor_theme: &'static str,
+    doctor_color: &'static str,
+    doctor_animations: &'static str,
+    doctor_terminal: &'static str,
+    doctor_config: &'static str,
+    doctor_data: &'static str,
+    doctor_questions: &'static str, // {topics} {lang}
+    doctor_tips: &'static str,      // {count} {lang}
+    doctor_enabled: &'static str,
+    doctor_disabled: &'static str,
+    doctor_interactive: &'static str,
+    doctor_plain: &'static str,
+    doctor_config_ok: &'static str,
+    doctor_config_missing: &'static str,
     // ----- languages ------------------------------------------------------
     languages_header: &'static str,
     // ----- self update / uninstall ----------------------------------------
@@ -261,6 +301,7 @@ const EN: Catalog = Catalog {
     demo_section_moods: "Moods",
     demo_section_themes: "Themes",
     demo_section_spinners: "Spinners",
+    demo_section_gradients: "Gradients",
     demo_done: "That's the tour — happy debugging!",
     mood_idle: "Idle",
     mood_thinking: "Thinking",
@@ -270,6 +311,9 @@ const EN: Catalog = Catalog {
     mood_surprised: "Surprised",
     mood_celebrating: "Celebrating",
     mood_sleeping: "Sleeping",
+    mood_confused: "Confused",
+    mood_proud: "Proud",
+    mood_reading: "Reading",
     stats_header: "Your debugging stats",
     stats_empty: "No sessions recorded yet — run one to build your history.",
     stats_sessions: "Sessions: {n}",
@@ -278,6 +322,30 @@ const EN: Catalog = Catalog {
     stats_avg_solution: "Avg time to solution: {d}",
     stats_by_topic: "By topic",
     stats_cleared: "History cleared.",
+    tip_label: "Tip",
+    tips_header: "Debugging tips:",
+    themes_header: "Available themes:",
+    themes_hint: "Use with:  rubberduck --theme <name>   (or config set theme <name>)",
+    history_header: "Recent sessions:",
+    history_empty: "No sessions recorded yet — run one to build your history.",
+    history_showing: "Showing the {shown} most recent of {total} sessions.",
+    doctor_header: "rubberduck doctor — environment check",
+    doctor_version: "Version",
+    doctor_language: "Language",
+    doctor_theme: "Theme",
+    doctor_color: "Colour",
+    doctor_animations: "Animations",
+    doctor_terminal: "Terminal",
+    doctor_config: "Config",
+    doctor_data: "Data",
+    doctor_questions: "{topics} topics ({lang})",
+    doctor_tips: "{count} tips ({lang})",
+    doctor_enabled: "enabled",
+    doctor_disabled: "disabled",
+    doctor_interactive: "interactive",
+    doctor_plain: "not a terminal",
+    doctor_config_ok: "ok",
+    doctor_config_missing: "not created yet (using defaults)",
     languages_header: "Available languages:",
     update_available: "🦆 Update available: {current} → {latest}",
     up_to_date: "🦆 rubberduck is up to date (version {current}).",
@@ -345,6 +413,7 @@ const DE: Catalog = Catalog {
     demo_section_moods: "Stimmungen",
     demo_section_themes: "Themes",
     demo_section_spinners: "Spinner",
+    demo_section_gradients: "Farbverläufe",
     demo_done: "Das war die Tour – frohes Debuggen!",
     mood_idle: "Ruhig",
     mood_thinking: "Nachdenklich",
@@ -354,6 +423,9 @@ const DE: Catalog = Catalog {
     mood_surprised: "Überrascht",
     mood_celebrating: "Feiernd",
     mood_sleeping: "Schläft",
+    mood_confused: "Verwirrt",
+    mood_proud: "Stolz",
+    mood_reading: "Lesend",
     stats_header: "Deine Debugging-Statistik",
     stats_empty: "Noch keine Sessions aufgezeichnet – starte eine, um deine Historie aufzubauen.",
     stats_sessions: "Sessions: {n}",
@@ -362,6 +434,30 @@ const DE: Catalog = Catalog {
     stats_avg_solution: "Ø Zeit bis zur Lösung: {d}",
     stats_by_topic: "Nach Thema",
     stats_cleared: "Historie gelöscht.",
+    tip_label: "Tipp",
+    tips_header: "Debugging-Tipps:",
+    themes_header: "Verfügbare Themes:",
+    themes_hint: "Nutze mit:  rubberduck --theme <name>   (oder config set theme <name>)",
+    history_header: "Letzte Sessions:",
+    history_empty: "Noch keine Sessions aufgezeichnet – starte eine, um deine Historie aufzubauen.",
+    history_showing: "Zeige die {shown} neuesten von {total} Sessions.",
+    doctor_header: "rubberduck doctor — Umgebungs-Check",
+    doctor_version: "Version",
+    doctor_language: "Sprache",
+    doctor_theme: "Theme",
+    doctor_color: "Farbe",
+    doctor_animations: "Animationen",
+    doctor_terminal: "Terminal",
+    doctor_config: "Konfiguration",
+    doctor_data: "Daten",
+    doctor_questions: "{topics} Themen ({lang})",
+    doctor_tips: "{count} Tipps ({lang})",
+    doctor_enabled: "aktiv",
+    doctor_disabled: "aus",
+    doctor_interactive: "interaktiv",
+    doctor_plain: "kein Terminal",
+    doctor_config_ok: "ok",
+    doctor_config_missing: "noch nicht angelegt (Standardwerte)",
     languages_header: "Verfügbare Sprachen:",
     update_available: "🦆 Update verfügbar: {current} → {latest}",
     up_to_date: "🦆 rubberduck ist aktuell (Version {current}).",
@@ -429,6 +525,7 @@ const FR: Catalog = Catalog {
     demo_section_moods: "Humeurs",
     demo_section_themes: "Thèmes",
     demo_section_spinners: "Indicateurs",
+    demo_section_gradients: "Dégradés",
     demo_done: "Fin de la visite – bon débogage !",
     mood_idle: "Au repos",
     mood_thinking: "Pensif",
@@ -438,6 +535,9 @@ const FR: Catalog = Catalog {
     mood_surprised: "Surpris",
     mood_celebrating: "En fête",
     mood_sleeping: "Endormi",
+    mood_confused: "Perplexe",
+    mood_proud: "Fier",
+    mood_reading: "En lecture",
     stats_header: "Tes statistiques de débogage",
     stats_empty: "Aucune session enregistrée – lances-en une pour bâtir ton historique.",
     stats_sessions: "Sessions : {n}",
@@ -446,6 +546,30 @@ const FR: Catalog = Catalog {
     stats_avg_solution: "Temps moyen jusqu'à la solution : {d}",
     stats_by_topic: "Par sujet",
     stats_cleared: "Historique effacé.",
+    tip_label: "Astuce",
+    tips_header: "Astuces de débogage :",
+    themes_header: "Thèmes disponibles :",
+    themes_hint: "À utiliser avec :  rubberduck --theme <nom>   (ou config set theme <nom>)",
+    history_header: "Sessions récentes :",
+    history_empty: "Aucune session enregistrée – lances-en une pour bâtir ton historique.",
+    history_showing: "Affichage des {shown} sessions les plus récentes sur {total}.",
+    doctor_header: "rubberduck doctor — vérification de l'environnement",
+    doctor_version: "Version",
+    doctor_language: "Langue",
+    doctor_theme: "Thème",
+    doctor_color: "Couleur",
+    doctor_animations: "Animations",
+    doctor_terminal: "Terminal",
+    doctor_config: "Configuration",
+    doctor_data: "Données",
+    doctor_questions: "{topics} sujets ({lang})",
+    doctor_tips: "{count} astuces ({lang})",
+    doctor_enabled: "activé",
+    doctor_disabled: "désactivé",
+    doctor_interactive: "interactif",
+    doctor_plain: "pas un terminal",
+    doctor_config_ok: "ok",
+    doctor_config_missing: "pas encore créé (valeurs par défaut)",
     languages_header: "Langues disponibles :",
     update_available: "🦆 Mise à jour disponible : {current} → {latest}",
     up_to_date: "🦆 rubberduck est à jour (version {current}).",
@@ -479,6 +603,118 @@ const FR: Catalog = Catalog {
     md_no_answer: "_(aucune réponse)_",
 };
 
+/// Spanish catalog.
+const ES: Catalog = Catalog {
+    greeting: "¡Hola! Tema: {topic}. Explícame tu problema paso a paso. \
+               (Escribe !aha en cuanto se te encienda la bombilla.)",
+    pondering: "El pato está pensando buenas preguntas …",
+    answer_prompt: "  Tú",
+    aborted_session: "Cancelado: ¡hasta el próximo cuac!",
+    aborted_no_topic: "Cancelado: no se eligió ningún tema.",
+    pick_topic_prompt: "¿Qué tema quieres repasar?",
+    end_confirm: "Aha, ¿encontraste el bug?",
+    aha_note_prompt: "¿Qué era? (nota breve, Enter para omitir)",
+    aha_closing: "¡Bien! Explicar ayuda: justo para eso estoy aquí.",
+    celebrate_quiet: "✨ ¡Bien, lo encontraste!",
+    quack_word: "¡Cuac!",
+    eureka: "¡EUREKA!",
+    summary_header: "──────── Resumen ────────",
+    summary_answered: "{answered} / {asked} preguntas respondidas",
+    summary_duration: "Duración: {total} ({avg} de media por pregunta)",
+    summary_solved: "✅ Bug encontrado",
+    summary_open: "– aún abierto",
+    log_saved: "Registro guardado: {path}",
+    topics_header: "Temas disponibles:",
+    topics_hint: "Empieza con:  rubberduck --topic <nombre>   (* = predeterminado)",
+    config_settings_header: "Ajustes ({path})",
+    config_exists: "Ya existe: {path}",
+    config_created: "Creado: {path}",
+    config_set_done: "Definido: {key} = {value}",
+    config_reset_done: "Restablecido a los valores predeterminados: {path}",
+    demo_title: "rubberduck — demo de animaciones",
+    demo_intro: "Mira bien: escribo, nado, hago cuac y celebro cuando ganas.",
+    demo_section_moods: "Estados de ánimo",
+    demo_section_themes: "Temas de color",
+    demo_section_spinners: "Indicadores",
+    demo_section_gradients: "Degradados",
+    demo_done: "Fin del recorrido: ¡feliz depuración!",
+    mood_idle: "Tranquilo",
+    mood_thinking: "Pensativo",
+    mood_listening: "Atento",
+    mood_happy: "Feliz",
+    mood_curious: "Curioso",
+    mood_surprised: "Sorprendido",
+    mood_celebrating: "Celebrando",
+    mood_sleeping: "Durmiendo",
+    mood_confused: "Confundido",
+    mood_proud: "Orgulloso",
+    mood_reading: "Leyendo",
+    stats_header: "Tus estadísticas de depuración",
+    stats_empty: "Aún no hay sesiones registradas: ejecuta una para construir tu historial.",
+    stats_sessions: "Sesiones: {n}",
+    stats_solved: "Resueltos: {solved}/{total} ({pct} %)",
+    stats_avg_session: "Sesión media: {d}",
+    stats_avg_solution: "Tiempo medio hasta la solución: {d}",
+    stats_by_topic: "Por tema",
+    stats_cleared: "Historial borrado.",
+    tip_label: "Consejo",
+    tips_header: "Consejos de depuración:",
+    themes_header: "Temas disponibles:",
+    themes_hint: "Úsalo con:  rubberduck --theme <nombre>   (o config set theme <nombre>)",
+    history_header: "Sesiones recientes:",
+    history_empty: "Aún no hay sesiones registradas: ejecuta una para construir tu historial.",
+    history_showing: "Mostrando las {shown} sesiones más recientes de {total}.",
+    doctor_header: "rubberduck doctor — comprobación del entorno",
+    doctor_version: "Versión",
+    doctor_language: "Idioma",
+    doctor_theme: "Tema",
+    doctor_color: "Color",
+    doctor_animations: "Animaciones",
+    doctor_terminal: "Terminal",
+    doctor_config: "Configuración",
+    doctor_data: "Datos",
+    doctor_questions: "{topics} temas ({lang})",
+    doctor_tips: "{count} consejos ({lang})",
+    doctor_enabled: "activado",
+    doctor_disabled: "desactivado",
+    doctor_interactive: "interactivo",
+    doctor_plain: "no es un terminal",
+    doctor_config_ok: "ok",
+    doctor_config_missing: "aún no creado (valores predeterminados)",
+    languages_header: "Idiomas disponibles:",
+    update_available: "🦆 Actualización disponible: {current} → {latest}",
+    up_to_date: "🦆 rubberduck está actualizado (versión {current}).",
+    no_releases: "No se encontraron versiones.",
+    updated_to: "🦆 Actualizado a la versión {version}.",
+    already_current: "🦆 Ya está actualizado (versión {version}).",
+    uninstall_header: "Se eliminará lo siguiente:",
+    uninstall_label_binary: "Binario",
+    uninstall_label_config: "Configuración",
+    uninstall_label_logs: "Registros",
+    uninstall_confirm: "¿Eliminar todo de verdad?",
+    uninstall_cancelled: "Cancelado: no se eliminó nada.",
+    uninstall_removed: "Eliminado: {path}",
+    uninstall_needs_tty: "La desinstalación necesita una confirmación interactiva y no es posible \
+                          sin terminal. Usa 'uninstall.sh --yes' en su lugar.",
+    uninstall_unsafe: "Cancelado: '{path}' parece un directorio personal o del sistema y no se \
+                       eliminará. Revisa RUBBERDUCK_CONFIG_DIR/RUBBERDUCK_DATA_DIR.",
+    uninstall_done: "rubberduck se ha eliminado. ¡Gracias por los cuacs! 🦆",
+    uninstall_binary_failed:
+        "Se eliminaron la configuración y los registros, pero no se pudo borrar \
+                              el binario en {path}. Elimínalo manualmente.",
+    md_title: "# 🦆 Sesión de Rubberduck – {date}",
+    md_topic: "**Tema:** {topic}",
+    md_started: "**Inicio:** {started_at}",
+    md_questions: "**Preguntas:** {answered} respondidas / {asked} formuladas",
+    md_duration: "**Duración:** {total} ({avg} de media por pregunta)",
+    md_solved: "**Resuelto:** {value}",
+    md_solved_yes: "✅ sí",
+    md_solved_no: "– abierto",
+    md_aha: "> 💡 **Aha tras la pregunta {after} ({time}):** {note}",
+    md_no_note: "(sin nota)",
+    md_no_answer: "_(sin respuesta)_",
+};
+
 /// A translator: turns message keys into localized, user-facing strings.
 ///
 /// `Tr` is `Copy`, so it can be threaded cheaply through the UI, the controller
@@ -508,6 +744,7 @@ impl Tr {
             Lang::English => &EN,
             Lang::German => &DE,
             Lang::French => &FR,
+            Lang::Spanish => &ES,
         }
     }
 
@@ -711,6 +948,12 @@ impl Tr {
         self.cat().demo_section_spinners
     }
 
+    /// Demo section heading: colour gradients.
+    #[must_use]
+    pub fn demo_section_gradients(self) -> &'static str {
+        self.cat().demo_section_gradients
+    }
+
     /// Closing line of the demo.
     #[must_use]
     pub fn demo_done(self) -> &'static str {
@@ -730,6 +973,9 @@ impl Tr {
             Mood::Surprised => c.mood_surprised,
             Mood::Celebrating => c.mood_celebrating,
             Mood::Sleeping => c.mood_sleeping,
+            Mood::Confused => c.mood_confused,
+            Mood::Proud => c.mood_proud,
+            Mood::Reading => c.mood_reading,
         }
     }
 
@@ -788,6 +1034,167 @@ impl Tr {
     #[must_use]
     pub fn stats_cleared(self) -> &'static str {
         self.cat().stats_cleared
+    }
+
+    // ----- tips -----------------------------------------------------------
+
+    /// Inline label prefix for a single tip (e.g. `Tip`).
+    #[must_use]
+    pub fn tip_label(self) -> &'static str {
+        self.cat().tip_label
+    }
+
+    /// Heading of `rubberduck tips`.
+    #[must_use]
+    pub fn tips_header(self) -> &'static str {
+        self.cat().tips_header
+    }
+
+    // ----- themes ---------------------------------------------------------
+
+    /// Heading of `rubberduck themes`.
+    #[must_use]
+    pub fn themes_header(self) -> &'static str {
+        self.cat().themes_header
+    }
+
+    /// Hint printed after the theme previews.
+    #[must_use]
+    pub fn themes_hint(self) -> &'static str {
+        self.cat().themes_hint
+    }
+
+    // ----- history --------------------------------------------------------
+
+    /// Heading of `rubberduck history`.
+    #[must_use]
+    pub fn history_header(self) -> &'static str {
+        self.cat().history_header
+    }
+
+    /// `history` with no recorded sessions.
+    #[must_use]
+    pub fn history_empty(self) -> &'static str {
+        self.cat().history_empty
+    }
+
+    /// Footer noting how many of the total sessions are shown.
+    #[must_use]
+    pub fn history_showing(self, shown: usize, total: usize) -> String {
+        fill(
+            self.cat().history_showing,
+            &[("shown", &shown.to_string()), ("total", &total.to_string())],
+        )
+    }
+
+    // ----- doctor ---------------------------------------------------------
+
+    /// Heading of `rubberduck doctor`.
+    #[must_use]
+    pub fn doctor_header(self) -> &'static str {
+        self.cat().doctor_header
+    }
+
+    /// Doctor row label: version.
+    #[must_use]
+    pub fn doctor_version(self) -> &'static str {
+        self.cat().doctor_version
+    }
+
+    /// Doctor row label: language.
+    #[must_use]
+    pub fn doctor_language(self) -> &'static str {
+        self.cat().doctor_language
+    }
+
+    /// Doctor row label: theme.
+    #[must_use]
+    pub fn doctor_theme(self) -> &'static str {
+        self.cat().doctor_theme
+    }
+
+    /// Doctor row label: colour.
+    #[must_use]
+    pub fn doctor_color(self) -> &'static str {
+        self.cat().doctor_color
+    }
+
+    /// Doctor row label: animations.
+    #[must_use]
+    pub fn doctor_animations(self) -> &'static str {
+        self.cat().doctor_animations
+    }
+
+    /// Doctor row label: terminal.
+    #[must_use]
+    pub fn doctor_terminal(self) -> &'static str {
+        self.cat().doctor_terminal
+    }
+
+    /// Doctor row label: config file.
+    #[must_use]
+    pub fn doctor_config(self) -> &'static str {
+        self.cat().doctor_config
+    }
+
+    /// Doctor row label: data directory.
+    #[must_use]
+    pub fn doctor_data(self) -> &'static str {
+        self.cat().doctor_data
+    }
+
+    /// Doctor value: number of question topics for a language.
+    #[must_use]
+    pub fn doctor_questions(self, topics: usize, lang: &str) -> String {
+        fill(
+            self.cat().doctor_questions,
+            &[("topics", &topics.to_string()), ("lang", lang)],
+        )
+    }
+
+    /// Doctor value: number of tips for a language.
+    #[must_use]
+    pub fn doctor_tips(self, count: usize, lang: &str) -> String {
+        fill(
+            self.cat().doctor_tips,
+            &[("count", &count.to_string()), ("lang", lang)],
+        )
+    }
+
+    /// Doctor status: a feature is enabled.
+    #[must_use]
+    pub fn doctor_enabled(self) -> &'static str {
+        self.cat().doctor_enabled
+    }
+
+    /// Doctor status: a feature is disabled.
+    #[must_use]
+    pub fn doctor_disabled(self) -> &'static str {
+        self.cat().doctor_disabled
+    }
+
+    /// Doctor status: stdout/stdin form an interactive terminal.
+    #[must_use]
+    pub fn doctor_interactive(self) -> &'static str {
+        self.cat().doctor_interactive
+    }
+
+    /// Doctor status: output is not a terminal.
+    #[must_use]
+    pub fn doctor_plain(self) -> &'static str {
+        self.cat().doctor_plain
+    }
+
+    /// Doctor status: the config file exists and parsed.
+    #[must_use]
+    pub fn doctor_config_ok(self) -> &'static str {
+        self.cat().doctor_config_ok
+    }
+
+    /// Doctor status: no config file yet (defaults in use).
+    #[must_use]
+    pub fn doctor_config_missing(self) -> &'static str {
+        self.cat().doctor_config_missing
     }
 
     // ----- languages ------------------------------------------------------
@@ -993,12 +1400,14 @@ mod tests {
         assert_eq!(Lang::from_code("deutsch"), Some(Lang::German));
         assert_eq!(Lang::from_code("french"), Some(Lang::French));
         assert_eq!(Lang::from_code("français"), Some(Lang::French));
+        assert_eq!(Lang::from_code("spanish"), Some(Lang::Spanish));
+        assert_eq!(Lang::from_code("español"), Some(Lang::Spanish));
         assert_eq!(Lang::from_code("xx"), None);
     }
 
     #[test]
     fn code_list_lists_every_language() {
-        assert_eq!(Lang::code_list(), "en, de, fr");
+        assert_eq!(Lang::code_list(), "en, de, fr, es");
     }
 
     #[test]
@@ -1006,9 +1415,11 @@ mod tests {
         let en = Tr::new(Lang::English);
         let de = Tr::new(Lang::German);
         let fr = Tr::new(Lang::French);
+        let es = Tr::new(Lang::Spanish);
         assert!(en.greeting("logic").contains("Topic: logic"));
         assert!(de.greeting("logic").contains("Thema: logic"));
         assert!(fr.greeting("logic").contains("Sujet : logic"));
+        assert!(es.greeting("logic").contains("Tema: logic"));
         // No two languages share the "solved" summary.
         assert_ne!(en.summary_solved(), de.summary_solved());
         assert_ne!(en.summary_solved(), fr.summary_solved());
@@ -1029,6 +1440,13 @@ mod tests {
         assert_eq!(Tr::new(Lang::English).mood_label(Mood::Happy), "Happy");
         assert_eq!(Tr::new(Lang::German).mood_label(Mood::Happy), "Glücklich");
         assert_eq!(Tr::new(Lang::French).mood_label(Mood::Happy), "Heureux");
+        assert_eq!(Tr::new(Lang::Spanish).mood_label(Mood::Happy), "Feliz");
+        // The moods added later are localized too (no fallback to a default).
+        assert_eq!(
+            Tr::new(Lang::English).mood_label(Mood::Confused),
+            "Confused"
+        );
+        assert_eq!(Tr::new(Lang::German).mood_label(Mood::Proud), "Stolz");
     }
 
     /// Every templated message must interpolate for every language: no result is
@@ -1049,6 +1467,9 @@ mod tests {
                 tr.stats_sessions(3),
                 tr.stats_solved(1, 2, 50),
                 tr.stats_avg_session("1m"),
+                tr.history_showing(5, 12),
+                tr.doctor_questions(8, "en"),
+                tr.doctor_tips(12, "en"),
                 tr.update_available("1", "2"),
                 tr.up_to_date("1"),
                 tr.uninstall_unsafe("/home"),

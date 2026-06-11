@@ -58,3 +58,47 @@ topics:
       - "Stimmen Authentifizierung, Header und Content-Type?"
       - "Liegt es an deiner Anfrage oder an der Antwort der Gegenseite?"
       - "Was zeigt ein direkter Test (curl/Postman) im Vergleich zu deinem Code?"
+
+  build:
+    description: "Build- und Compile-Fehler."
+    questions:
+      - "Was sagt der erste Fehler genau — nicht die Kaskade von Fehlern danach?"
+      - "Auf welche Datei und Zeile zeigt der Compiler — passt das zu der Stelle, wo du das Problem vermutest?"
+      - "Hast du einen Clean-Build gemacht, oder könnte das ein veralteter Cache oder ein altes Artefakt sein?"
+      - "Sind alle Abhängigkeiten in den Versionen vorhanden, die das Projekt erwartet?"
+      - "Lief der Build vorher? Was hat sich geändert — eine Abhängigkeit, ein Flag, die Toolchain?"
+      - "Ist es ein Syntaxfehler, ein Typfehler oder ein Linker-/Missing-Symbol-Fehler? Jeder hat eine andere Ursache."
+      - "Kannst du es mit der kleinstmöglichen Datei oder dem kleinsten Target reproduzieren?"
+
+  concurrency:
+    description: "Threads, async, Races und Deadlocks."
+    questions:
+      - "Welche Daten werden zwischen Threads oder Tasks geteilt — und was schützt sie tatsächlich?"
+      - "Könnten zwei Dinge gleichzeitig laufen, von denen du angenommen hast, dass sie der Reihe nach laufen?"
+      - "Verschwindet der Bug, wenn du eine Verzögerung einbaust oder single-threaded läufst? Das deutet auf einen Race hin."
+      - "Wer sperrt was, in welcher Reihenfolge — könnten zwei Locks in umgekehrter Reihenfolge genommen werden (Deadlock)?"
+      - "Wartest du auf alles per await oder join, oder könnte ein Task verworfen oder unbeendet bleiben?"
+      - "Ist der Zustand, den du liest, schon wirklich veröffentlicht, oder könntest du einen veralteten Wert sehen?"
+      - "Ist es reproduzierbar, oder nur unter Last? Sporadisch heißt meistens Timing."
+
+  memory:
+    description: "Crashes, Leaks und Korruption."
+    questions:
+      - "Welche Art von Fehler ist es — ein Crash, ein Leak oder falsche Daten (Use-after-free, Overflow)?"
+      - "Welcher genaue Zugriff fliegt dir um die Ohren — ein Index, ein Pointer, ein unwrap auf etwas Leerem?"
+      - "Ist der Buffer groß genug für jeden Fall, auch für die Grenze und den leeren?"
+      - "Wird etwas freigegeben oder verlässt seinen Scope, während es woanders noch benutzt wird?"
+      - "Wächst der Leak mit einer bestimmten Aktion — kannst du die Allokation isolieren, die nie freigegeben wird?"
+      - "Was sagen ein Sanitizer oder ein Debugger über die fehlerhafte Adresse?"
+      - "Sind Ownership und Lifetimes klar, oder ist unklar, wer was wann freigibt?"
+
+  network:
+    description: "HTTP, Sockets, Timeouts und DNS."
+    questions:
+      - "Verlässt der Request überhaupt deine Maschine — was zeigt ein Paket- oder HTTP-Trace?"
+      - "Scheitert es am DNS, an der Verbindung, am TLS oder an der Antwort selbst?"
+      - "Welchen Statuscode, Timeout oder Verbindungsfehler bekommst du genau?"
+      - "Sind URL, Port, Header und Timeouts das, was du wirklich beabsichtigst?"
+      - "Funktioniert es aus curl oder einem anderen Client, aber nicht aus deinem Code — oder andersherum?"
+      - "Könnte es flaky sein: Retries, Rate Limits oder ein langsamer und überlasteter Server?"
+      - "Behandelst du partielle Reads, Timeouts und Verbindungsabbrüche, nicht nur den Happy Path?"

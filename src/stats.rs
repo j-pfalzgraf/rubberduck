@@ -2,14 +2,12 @@
 
 use crate::history::{self, Aggregate, TopicAggregate};
 use crate::session::format_duration;
-use crate::ui::animate::{Animation, Frame};
-use crate::ui::gradient::{self, Gradient};
-use crate::ui::theme::Styler;
+use crate::ui::bar::{self, BarRow, GrowingBars};
+use crate::ui::gradient::Gradient;
 use crate::ui::Ui;
 use anyhow::{Context, Result};
 use serde::Serialize;
 use std::collections::BTreeMap;
-use std::time::Duration;
 
 /// Shows aggregate statistics, clears the history (`reset`) or prints JSON (`json`).
 pub fn show(ui: &mut Ui, reset: bool, json: bool) -> Result<()> {
@@ -53,6 +51,14 @@ pub fn show(ui: &mut Ui, reset: bool, json: bool) -> Result<()> {
             st.accent("•"),
             tr.stats_solved(agg.solved, agg.sessions, agg.solve_rate())
         );
+        // A small solve-rate gauge under the headline figure.
+        let gauge = bar::meter(
+            agg.solve_rate() as f32 / 100.0,
+            20,
+            &Gradient::mint(),
+            st.enabled(),
+        );
+        println!("    {gauge}");
         println!(
             "  {} {}",
             st.accent("•"),
@@ -68,9 +74,28 @@ pub fn show(ui: &mut Ui, reset: bool, json: bool) -> Result<()> {
         println!("\n{}", st.accent(tr.stats_by_topic()));
     }
 
-    let chart = BarChart::new(&agg, *ui.styler(), Gradient::ocean());
+    let chart = topic_chart(&agg, *ui.styler());
     ui.play(&chart)?;
     Ok(())
+}
+
+/// Builds the animated per-topic bar chart from an [`Aggregate`].
+///
+/// Each bar's caption shows the session count and the per-topic solve rate, so
+/// the chart conveys both volume and success at a glance.
+fn topic_chart(agg: &Aggregate, styler: crate::ui::theme::Styler) -> GrowingBars {
+    let rows = agg
+        .per_topic
+        .iter()
+        .map(|(name, t)| {
+            BarRow::with_caption(
+                name.clone(),
+                t.sessions,
+                format!("{} ({}%)", t.sessions, t.solve_rate()),
+            )
+        })
+        .collect();
+    GrowingBars::new(rows, styler, Gradient::ocean())
 }
 
 /// Machine-readable stats view for `stats --json`.
@@ -84,77 +109,15 @@ struct JsonView<'a> {
     per_topic: &'a BTreeMap<String, TopicAggregate>,
 }
 
-/// An animated horizontal bar chart of sessions per topic (bars grow in).
-struct BarChart {
-    rows: Vec<(String, usize)>,
-    max: usize,
-    styler: Styler,
-    gradient: Gradient,
-    frames: usize,
-    bar_width: usize,
-}
-
-impl BarChart {
-    fn new(agg: &Aggregate, styler: Styler, gradient: Gradient) -> Self {
-        let rows: Vec<(String, usize)> = agg
-            .per_topic
-            .iter()
-            .map(|(name, t)| (name.clone(), t.sessions))
-            .collect();
-        let max = rows.iter().map(|(_, v)| *v).max().unwrap_or(0);
-        Self {
-            rows,
-            max,
-            styler,
-            gradient,
-            frames: 12,
-            bar_width: 24,
-        }
-    }
-}
-
-impl Animation for BarChart {
-    fn frame_count(&self) -> usize {
-        if self.rows.is_empty() {
-            0
-        } else {
-            self.frames
-        }
-    }
-
-    fn frame(&self, i: usize) -> Frame {
-        let progress = (i + 1) as f32 / self.frames as f32;
-        let lines = self
-            .rows
-            .iter()
-            .map(|(name, value)| {
-                let full = (value * self.bar_width).checked_div(self.max).unwrap_or(0);
-                let len = (full as f32 * progress).round() as usize;
-                let bar = gradient::paint(&"█".repeat(len), &self.gradient, self.styler.enabled());
-                format!(
-                    "  {:<8} {} {}",
-                    name,
-                    bar,
-                    self.styler.dim(&value.to_string())
-                )
-            })
-            .collect();
-        Frame::new(lines)
-    }
-
-    fn delay(&self, _i: usize) -> Duration {
-        Duration::from_millis(55)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::history::TopicAggregate;
-    use crate::ui::theme::Theme;
+    use crate::ui::animate::Animation;
+    use crate::ui::theme::{Styler, Theme};
 
     #[test]
-    fn bar_chart_renders_topics_with_full_bars_at_end() {
+    fn topic_chart_renders_topics_with_full_bars_and_rates_at_end() {
         let mut agg = Aggregate {
             sessions: 4,
             ..Aggregate::default()
@@ -174,7 +137,7 @@ mod tests {
             },
         );
 
-        let chart = BarChart::new(&agg, Styler::new(Theme::CLASSIC, false), Gradient::ocean());
+        let chart = topic_chart(&agg, Styler::new(Theme::CLASSIC, false));
         assert_eq!(chart.frame_count(), 12);
         let last = chart.frame(chart.frame_count() - 1).lines.join("\n");
         assert!(last.contains("logic") && last.contains("api"));
@@ -182,15 +145,13 @@ mod tests {
             last.contains('█'),
             "the busiest topic should have a full bar"
         );
+        // logic solved 2 of 3 sessions -> 66%.
+        assert!(last.contains("66%"), "per-topic solve rate should show");
     }
 
     #[test]
     fn empty_chart_has_no_frames() {
-        let chart = BarChart::new(
-            &Aggregate::default(),
-            Styler::new(Theme::CLASSIC, false),
-            Gradient::ocean(),
-        );
+        let chart = topic_chart(&Aggregate::default(), Styler::new(Theme::CLASSIC, false));
         assert_eq!(chart.frame_count(), 0);
     }
 }

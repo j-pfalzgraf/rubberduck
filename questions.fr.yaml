@@ -60,3 +60,47 @@ topics:
       - "L'authentification, les en-têtes et le type de contenu sont-ils corrects ?"
       - "Est-ce ta requête, ou la réponse de l'autre côté ?"
       - "Que montre un test direct (curl/Postman) comparé à ton code ?"
+
+  build:
+    description: "Erreurs de build et de compilation."
+    questions:
+      - "Que dit exactement la première erreur — pas la cascade d'erreurs qui suit ?"
+      - "Vers quel fichier et quelle ligne pointe le compilateur — est-ce que ça correspond à l'endroit où tu soupçonnes le problème ?"
+      - "As-tu lancé un build propre, ou serait-ce un cache périmé ou un vieil artefact ?"
+      - "Toutes les dépendances sont-elles présentes aux versions attendues par le projet ?"
+      - "Est-ce que ça compilait avant ? Qu'est-ce qui a changé — une dépendance, un flag, la toolchain ?"
+      - "Est-ce une erreur de syntaxe, de type, ou une erreur du Linker / de symbole manquant ? Chacune a une cause différente."
+      - "Peux-tu le reproduire avec le plus petit fichier ou la plus petite cible possible ?"
+
+  concurrency:
+    description: "Threads, async, races et interblocages."
+    questions:
+      - "Quelles données sont partagées entre les threads ou les tâches — et qu'est-ce qui les protège réellement ?"
+      - "Deux choses pourraient-elles s'exécuter en même temps alors que tu supposais qu'elles s'exécutaient dans l'ordre ?"
+      - "Le bug disparaît-il quand tu ajoutes un délai ou que tu passes en mono-thread ? Ça sent la race condition."
+      - "Qui verrouille quoi, et dans quel ordre — deux verrous pourraient-ils être pris dans des ordres opposés (interblocage) ?"
+      - "Attends-tu (await) ou joins-tu bien tout, ou une tâche pourrait-elle être abandonnée ou laissée inachevée ?"
+      - "L'état que tu lis est-il vraiment déjà publié, ou pourrais-tu voir une valeur périmée ?"
+      - "Est-ce reproductible, ou seulement sous charge ? Intermittent, ça veut souvent dire une histoire de timing."
+
+  memory:
+    description: "Crashs, fuites et corruption."
+    questions:
+      - "De quel type de défaillance s'agit-il — un crash, une fuite, ou des données erronées (use-after-free, overflow) ?"
+      - "Quel accès précis explose — un index, un pointeur, un unwrap sur quelque chose de vide ?"
+      - "Le buffer est-il assez grand pour tous les cas, y compris la limite et le cas vide ?"
+      - "Quelque chose est-il libéré ou sort-il de sa portée alors qu'il est encore utilisé ailleurs ?"
+      - "La fuite grossit-elle avec une action précise — peux-tu isoler l'allocation qui n'est jamais libérée ?"
+      - "Que disent un sanitizer ou un débogueur à propos de l'adresse fautive ?"
+      - "La propriété (ownership) et les durées de vie sont-elles claires, ou reste-t-il ambigu de savoir qui libère quoi et quand ?"
+
+  network:
+    description: "HTTP, sockets, timeouts et DNS."
+    questions:
+      - "La requête quitte-t-elle seulement ta machine — que montre une trace de paquets ou une trace HTTP ?"
+      - "Est-ce le DNS, la connexion, le TLS, ou la réponse elle-même qui échoue ?"
+      - "Quel code de statut, quel timeout ou quelle erreur de connexion obtiens-tu exactement ?"
+      - "L'URL, le port, les en-têtes et les timeouts sont-ils bien ceux que tu veux vraiment ?"
+      - "Ça marche depuis curl ou un autre client mais pas depuis ton code — ou l'inverse ?"
+      - "Serait-ce instable : des retries, des limites de débit, ou un serveur lent et surchargé ?"
+      - "Gères-tu les lectures partielles, les timeouts et les déconnexions, et pas seulement le cas idéal ?"

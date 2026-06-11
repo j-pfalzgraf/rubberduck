@@ -1,0 +1,42 @@
+# Configuration for `cargo-deny` (https://github.com/EmbarkStudios/cargo-deny).
+#
+# Checks the dependency graph for security advisories, disallowed licences,
+# banned/duplicate crates and untrusted sources. Run locally with
+# `cargo deny check`.
+
+[advisories]
+# serde_yaml is unmaintained (RUSTSEC-2024-0006) but still functional and
+# deliberately chosen; mirror the `cargo audit` ignore in audit.yml so this only
+# fails on real vulnerabilities.
+ignore = ["RUSTSEC-2024-0006"]
+
+[licenses]
+# Permissive licences used across the dependency tree (including the optional,
+# non-default `vendored-openssl` path).
+allow = [
+  "MIT",
+  "Apache-2.0",
+  "Apache-2.0 WITH LLVM-exception",
+  "BSD-2-Clause",
+  "BSD-3-Clause",
+  "ISC",
+  "Zlib",
+  "MPL-2.0",
+  "Unicode-3.0",
+  "Unicode-DFS-2016",
+  "CC0-1.0",
+  "OpenSSL",
+]
+confidence-threshold = 0.9
+# Several allowances above are forward-looking (e.g. the optional vendored
+# OpenSSL build); don't warn when one isn't currently in the graph.
+unused-allowed-license = "allow"
+
+[bans]
+# Duplicate versions are common and low-risk for a CLI; surface but don't fail.
+multiple-versions = "warn"
+wildcards = "allow"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

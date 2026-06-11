@@ -1,0 +1,22 @@
+# rubberduck – Debugging-Tipps (Deutsch)
+#
+# Eine flache Liste kurzer Tipps. `rubberduck tip` zeigt einen zufälligen,
+# `rubberduck tips` listet alle auf. Frei editierbar; dein Team kann sie teilen.
+# Wird beim ersten Start unter ~/.config/rubberduck/tips.de.yaml angelegt.
+
+tips:
+  - "Erkläre das Problem laut, Zeile für Zeile — das ist der ganze Trick."
+  - "Lies die Fehlermeldung nochmal, langsam. Die Antwort steht oft in der ersten Zeile."
+  - "Mach es kleiner: schrumpf den Input, bis der Bug gerade so überlebt."
+  - "Überprüfe deine Annahmen — gib den einen Wert aus, bei dem du dir *sicher* bist."
+  - "Was hat sich kurz vorher geändert, bevor es kaputtging? Fang dort mit der Suche an."
+  - "Wenn es nur manchmal fehlschlägt, verdächtige Timing, Reihenfolge oder geteilten Zustand."
+  - "Reproduziere es zuverlässig, bevor du versuchst, es zu fixen."
+  - "Ändere immer nur eine Sache. Zwei Änderungen verdecken gegenseitig ihre Wirkung."
+  - "Mach Rubber-Ducking: Ein Zuhörer, der nur nickt, ist immer noch ein Zuhörer."
+  - "Schreib den fehlschlagenden Fall als Test — dann weißt du, wann er gefixt ist."
+  - "Such den Fehler per Binärsuche: Bricht es auf halbem Weg immer noch ab?"
+  - "Off-by-one? Prüf nochmal < gegen <=, und deine 0 gegen 1."
+  - "Geh fünf Minuten weg. Der Bug wartet; dein frischer Blick nicht."
+  - "Wenn Doku und Verhalten sich widersprechen, vertrau einem kleinen Experiment."
+  - "Benenne den Bug in einem Satz. Wenn du das nicht kannst, hast du ihn noch nicht verstanden."

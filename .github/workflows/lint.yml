@@ -1,0 +1,36 @@
+# Repository hygiene: spell-checking (typos) and dependency policy (cargo-deny:
+# licences, advisories, bans, sources). Both read their config from the repo
+# root (typos.toml / deny.toml).
+name: Lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  typos:
+    name: typos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Spell check
+        # Pinned to the immutable major tag (Dependabot-trackable), not a branch.
+        uses: crate-ci/typos@v1
+
+  cargo-deny:
+    name: cargo-deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Check licences, advisories, bans and sources
+        uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          command: check

@@ -13,11 +13,14 @@ use crate::ui::Ui;
 use anyhow::Result;
 
 /// Moods shown, in order, during the demo.
-const SHOWCASE: [Mood; 6] = [
+const SHOWCASE: [Mood; 9] = [
     Mood::Idle,
     Mood::Thinking,
     Mood::Curious,
+    Mood::Confused,
+    Mood::Reading,
     Mood::Happy,
+    Mood::Proud,
     Mood::Surprised,
     Mood::Sleeping,
 ];
@@ -43,6 +46,9 @@ pub fn run(ui: &mut Ui) -> Result<()> {
     for style in SpinnerStyle::ALL {
         ui.spinner_showcase(style)?;
     }
+
+    println!("\n{}", ui.styler().accent(tr.demo_section_gradients()));
+    ui.gradient_previews();
 
     println!("\n{}", ui.styler().accent(tr.demo_section_themes()));
     ui.theme_previews();

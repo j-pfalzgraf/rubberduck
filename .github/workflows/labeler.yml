@@ -1,0 +1,19 @@
+# Automatically labels pull requests by the areas of the repo they touch,
+# based on .github/labeler.yml.
+name: Labeler
+
+on:
+  pull_request_target:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  label:
+    name: label by changed paths
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/labeler@v5
+        with:
+          sync-labels: true

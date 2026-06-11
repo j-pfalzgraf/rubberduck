@@ -177,3 +177,138 @@ fn config_set_rejects_bad_value() {
         .assert()
         .failure();
 }
+
+#[test]
+fn help_lists_the_new_commands() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .arg("--help")
+        .assert()
+        .success()
+        .stdout(contains("themes"))
+        .stdout(contains("tip"))
+        .stdout(contains("history"))
+        .stdout(contains("doctor"));
+}
+
+#[test]
+fn topics_includes_the_added_topics() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .arg("topics")
+        .assert()
+        .success()
+        .stdout(contains("build"))
+        .stdout(contains("concurrency"))
+        .stdout(contains("memory"))
+        .stdout(contains("network"));
+}
+
+#[test]
+fn languages_lists_spanish() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .arg("languages")
+        .assert()
+        .success()
+        .stdout(contains("Español"));
+}
+
+#[test]
+fn topics_localizes_to_spanish() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .args(["topics", "--lang", "es"])
+        .assert()
+        .success()
+        .stdout(contains("Temas disponibles"));
+    assert!(tmp.path().join("config").join("questions.es.yaml").exists());
+}
+
+#[test]
+fn themes_lists_every_theme() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .arg("themes")
+        .assert()
+        .success()
+        .stdout(contains("classic"))
+        .stdout(contains("dracula"))
+        .stdout(contains("nord"))
+        .stdout(contains("solarized"));
+}
+
+#[test]
+fn tip_prints_a_tip_and_seeds_the_file() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .args(["tip", "--no-anim", "--quiet"])
+        .assert()
+        .success();
+    assert!(tmp.path().join("config").join("tips.en.yaml").exists());
+}
+
+#[test]
+fn tips_lists_and_localizes() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .arg("tips")
+        .assert()
+        .success()
+        .stdout(contains("Debugging tips"));
+    duck(tmp.path())
+        .args(["tips", "--lang", "es"])
+        .assert()
+        .success()
+        .stdout(contains("Consejos de depuración"));
+}
+
+#[test]
+fn doctor_reports_the_environment() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .arg("doctor")
+        .assert()
+        .success()
+        .stdout(contains("Version"))
+        .stdout(contains("8 topics (en)"))
+        .stdout(contains("tips (en)"));
+}
+
+#[test]
+fn history_is_empty_initially() {
+    let tmp = tempfile::tempdir().unwrap();
+    duck(tmp.path())
+        .args(["history", "--json"])
+        .assert()
+        .success()
+        .stdout(contains("\"total\": 0"))
+        .stdout(contains("\"sessions\""));
+}
+
+#[test]
+fn history_shows_seeded_sessions_newest_first() {
+    let tmp = tempfile::tempdir().unwrap();
+    let data = tmp.path().join("data");
+    std::fs::create_dir_all(&data).unwrap();
+    std::fs::write(
+        data.join("history.jsonl"),
+        "{\"date\":\"2026-06-08\",\"topic\":\"logic\",\"asked\":7,\"answered\":6,\"total_seconds\":120,\"solved\":true,\"seconds_to_solution\":90}\n\
+         {\"date\":\"2026-06-09\",\"topic\":\"memory\",\"asked\":7,\"answered\":3,\"total_seconds\":60,\"solved\":false,\"seconds_to_solution\":null}\n",
+    )
+    .unwrap();
+    duck(tmp.path())
+        .args(["history", "--json"])
+        .assert()
+        .success()
+        .stdout(contains("\"total\": 2"))
+        // Newest first: memory (2026-06-09) precedes logic (2026-06-08).
+        .stdout(predicates::str::is_match(r#"(?s)"memory".*"logic""#).unwrap());
+    // Animated/table view renders both topics.
+    duck(tmp.path())
+        .args(["history", "--no-anim"])
+        .assert()
+        .success()
+        .stdout(contains("logic"))
+        .stdout(contains("memory"));
+}

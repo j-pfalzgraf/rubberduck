@@ -40,6 +40,44 @@ pub fn visible_width(s: &str) -> usize {
     display_width(&plain)
 }
 
+/// Fits `s` into exactly `width` display columns: pads with spaces when too
+/// short, and clips with a trailing `…` when too long.
+///
+/// Unlike `{:<width$}` (which counts `char`s and never truncates), this measures
+/// in terminal columns, so fixed-width table columns stay aligned even with wide
+/// or over-long labels.
+#[must_use]
+pub fn fit(s: &str, width: usize) -> String {
+    let w = display_width(s);
+    if w == width {
+        return s.to_string();
+    }
+    if w < width {
+        return format!("{s}{}", " ".repeat(width - w));
+    }
+    if width == 0 {
+        return String::new();
+    }
+    // Too long: keep as many columns as fit alongside a one-column ellipsis.
+    let budget = width - 1;
+    let mut out = String::new();
+    let mut used = 0;
+    for ch in s.chars() {
+        let cw = display_width(ch.encode_utf8(&mut [0u8; 4]));
+        if used + cw > budget {
+            break;
+        }
+        out.push(ch);
+        used += cw;
+    }
+    out.push('…');
+    let total = used + 1;
+    if total < width {
+        out.push_str(&" ".repeat(width - total));
+    }
+    out
+}
+
 /// Wraps `text` at word boundaries into lines of at most `width` columns.
 ///
 /// Individual, overly long words may exceed the width (they are not hard
@@ -139,6 +177,21 @@ mod tests {
         assert_eq!(visible_width(""), 0);
         // coloured duck: visible width = 5 ("<( o)")
         assert_eq!(visible_width("\u{1b}[33m<( o)\u{1b}[0m"), 5);
+    }
+
+    #[test]
+    fn fit_pads_and_clips_to_exact_width() {
+        // Short -> padded.
+        assert_eq!(fit("api", 6), "api   ");
+        assert_eq!(display_width(&fit("api", 6)), 6);
+        // Exact -> unchanged.
+        assert_eq!(fit("logic", 5), "logic");
+        // Long -> clipped with an ellipsis, still exactly `width` columns.
+        let f = fit("averyverylongtopic", 8);
+        assert_eq!(display_width(&f), 8);
+        assert!(f.ends_with('…'));
+        // Zero width -> empty.
+        assert_eq!(fit("x", 0), "");
     }
 
     #[test]
